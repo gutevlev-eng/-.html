@@ -69,7 +69,6 @@
     button, input, select { font: inherit; }
     button { cursor: pointer; }
     button:disabled { opacity: .55; cursor: not-allowed; }
-
     [hidden] { display: none !important; }
 
     button:focus-visible,
@@ -827,10 +826,11 @@
 
     const $ = selector => document.querySelector(selector);
 
-    // Имя базы оставлено прежним: заметки из предыдущей версии сохранятся.
+    // Сохраняем имя базы для совместимости с предыдущей версией.
     const DB_NAME = "beautiful-notes-db";
     const MAX_FILE_BYTES = 5 * 1024 * 1024;
     const MAX_IMPORT_BYTES = 80 * 1024 * 1024;
+
     const IMAGE_TYPES = new Set([
       "image/png",
       "image/jpeg",
@@ -849,6 +849,7 @@
     let toastTimer;
     let closeTimer;
     let saving = false;
+    let checkingReminders = false;
 
     function uid() {
       return globalThis.crypto?.randomUUID?.() ||
@@ -893,7 +894,7 @@
       try {
         localStorage.setItem("notes-theme", dark ? "dark" : "light");
       } catch {
-        // Тема продолжит работать до перезагрузки страницы.
+        // Если localStorage недоступен, тема работает до перезагрузки.
       }
     }
 
@@ -940,8 +941,10 @@
         };
 
         tx.oncomplete = () => resolve(result);
-        tx.onerror = () => reject(tx.error || new Error("Ошибка хранилища"));
-        tx.onabort = () => reject(tx.error || new Error("Операция отменена"));
+        tx.onerror = () =>
+          reject(tx.error || new Error("Ошибка хранилища"));
+        tx.onabort = () =>
+          reject(tx.error || new Error("Операция отменена"));
       });
     }
 
@@ -957,9 +960,9 @@
     const getSavedFolders = () =>
       transaction("settings", "readonly", store => store.get("folders"));
 
-    const saveFolders = () =>
+    const saveFolders = value =>
       transaction("settings", "readwrite", store =>
-        store.put({ key: "folders", value: folders })
+        store.put({ key: "folders", value })
       );
 
     function formatDate(value) {
@@ -1018,7 +1021,6 @@
         }
 
         const field = sort === "created" ? "createdAt" : "updatedAt";
-
         return (Number(b[field]) || 0) - (Number(a[field]) || 0);
       });
     }
@@ -1102,11 +1104,7 @@
         `).join("");
     }
 
-    /*
-      Разрешаем только элементы форматирования редактора.
-      Скрипты, стили, SVG, iframe и прочие опасные элементы
-      удаляем целиком, а не превращаем в текст.
-    */
+    // Оставляем только разметку, необходимую самому редактору.
     function sanitizeRichHTML(html) {
       const template = document.createElement("template");
       template.innerHTML = String(html || "");
@@ -1221,6 +1219,7 @@
 
       const name =
         String(value.name || "Без названия").slice(0, 180);
+
       const id =
         typeof value.id === "string" ? value.id : uid();
 
@@ -1234,7 +1233,6 @@
 
       if (typeof value.data !== "string") return null;
 
-      // Ограничиваем размер и требуем именно base64 data URL.
       if (
         value.data.length > MAX_FILE_BYTES * 1.4 + 200 ||
         !/^data:[^,]*;base64,[a-z0-9+/=\s]+$/i.test(value.data)
@@ -1266,8 +1264,6 @@
       }
 
       if (value.kind === "file") {
-        // Вложения скачиваются как бинарные файлы, а не открываются
-        // как HTML или скрипт из потенциально опасного data URL.
         return {
           id,
           kind: "file",
@@ -1328,6 +1324,10 @@
         );
 
         remove.onclick = () => {
+          if (!draft || $("#editor").classList.contains("closing")) {
+            return;
+          }
+
           draft.attachments.splice(index, 1);
           renderAttachments();
         };
@@ -1356,7 +1356,12 @@
 
       const content = document.createElement("span");
       content.className = "todo-text";
-      content.textContent = text || "\u200B";
+
+      if (text) {
+        content.textContent = text;
+      } else {
+        content.append(document.createElement("br"));
+      }
 
       if (done) row.classList.add("done");
 
@@ -1398,6 +1403,8 @@
     }
 
     function openEditor(note = null) {
+      if (saving) return;
+
       clearTimeout(closeTimer);
 
       const editor = $("#editor");
@@ -1452,8 +1459,7 @@
         ? sanitizeRichHTML(draft.richHTML)
         : escapeHTML(draft.text || "").replace(/\n/g, "<br>");
 
-      // Старые пункты переносим только при отсутствии richHTML.
-      // Иначе при каждом открытии они дублировались бы.
+      // Старые пункты добавляем только при отсутствии richHTML.
       if (!hasRichHTML) {
         for (const item of draft.checks) {
           body.append(createTodoRow(
@@ -1477,7 +1483,7 @@
       $("#noteTitle").focus();
     }
 
-    async function closeEditor(force = false) {
+    function closeEditor(force = false) {
       const editor = $("#editor");
 
       if (
@@ -1497,15 +1503,13 @@
         return;
       }
 
-      if (document.fullscreenElement === editor) {
-        try {
-          await document.exitFullscreen();
-        } catch {
-          // Редактор всё равно закроется.
-        }
-      }
-
+      // Отмечаем редактор закрывающимся до асинхронных операций.
+      // Так повторный клик не запускает второе закрытие.
       editor.classList.add("closing");
+
+      if (document.fullscreenElement === editor) {
+        document.exitFullscreen().catch(() => {});
+      }
 
       closeTimer = setTimeout(() => {
         editor.hidden = true;
@@ -1575,10 +1579,12 @@
       const selectedText = window.getSelection().toString();
 
       if (format === "todo") {
-        const insideTodo =
-          range.startContainer.parentElement?.closest(".todo-row");
+        const startElement =
+          range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? range.startContainer
+            : range.startContainer.parentElement;
 
-        if (insideTodo) {
+        if (startElement?.closest(".todo-row")) {
           notify("Курсор уже находится внутри туду-пункта");
           return;
         }
@@ -1607,6 +1613,12 @@
 
       if (!selectedText) {
         notify("Сначала выделите текст, который нужно оформить");
+        return;
+      }
+
+      // Не переносим checkbox внутрь элемента форматирования.
+      if (range.cloneContents().querySelector?.('input[type="checkbox"]')) {
+        notify("Выделите текст, не затрагивая флажок туду-пункта");
         return;
       }
 
@@ -1644,12 +1656,16 @@
         document.body.append(helper);
         helper.select();
 
-        const success = document.execCommand("copy");
-        helper.remove();
+        let success = false;
 
-        notify(
-          success ? "Скопировано" : "Не удалось скопировать"
-        );
+        try {
+          success = document.execCommand("copy");
+        } catch {
+          // Покажем сообщение об ошибке ниже.
+        }
+
+        helper.remove();
+        notify(success ? "Скопировано" : "Не удалось скопировать");
       }
     }
 
@@ -1664,6 +1680,7 @@
 
       saving = true;
       $("#saveNote").disabled = true;
+      $("#deleteNote").disabled = true;
 
       const saved = {
         ...draft,
@@ -1693,22 +1710,22 @@
         notes = await getAllNotes();
         render();
 
-        await closeEditor(true);
+        closeEditor(true);
         notify("Заметка сохранена");
       } catch (error) {
         console.error(error);
-        notify(
-          "Не удалось сохранить заметку. Проверьте свободное место"
-        );
+        notify("Не удалось сохранить заметку. Проверьте свободное место");
       } finally {
         saving = false;
         $("#saveNote").disabled = false;
+        $("#deleteNote").disabled = false;
       }
     }
 
     function readAsDataURL(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
+
         reader.onload = () => resolve(reader.result);
         reader.onerror = () => reject(reader.error);
         reader.readAsDataURL(file);
@@ -1734,9 +1751,12 @@
         try {
           const data = await readAsDataURL(file);
 
-          // Если за время чтения пользователь закрыл заметку,
-          // не добавляем вложение в уже закрытый редактор.
-          if (draft !== targetDraft) return;
+          if (
+            draft !== targetDraft ||
+            $("#editor").classList.contains("closing")
+          ) {
+            return;
+          }
 
           const attachment = safeAttachment({
             id: uid(),
@@ -1751,12 +1771,11 @@
           }
 
           targetDraft.attachments.push(attachment);
+          renderAttachments();
         } catch {
           notify(`Не удалось прочитать «${file.name}»`);
         }
       }
-
-      if (draft === targetDraft) renderAttachments();
     }
 
     function shareText() {
@@ -1875,6 +1894,38 @@
       };
     }
 
+    // Одна транзакция: при ошибке не остаётся частично импортированных заметок.
+    function commitImport(importedNotes, updatedFolders) {
+      return new Promise((resolve, reject) => {
+        let tx;
+
+        try {
+          tx = db.transaction(["notes", "settings"], "readwrite");
+
+          const noteStore = tx.objectStore("notes");
+
+          for (const note of importedNotes) {
+            noteStore.put(note);
+          }
+
+          tx.objectStore("settings").put({
+            key: "folders",
+            value: updatedFolders
+          });
+        } catch (error) {
+          if (tx) tx.abort();
+          reject(error);
+          return;
+        }
+
+        tx.oncomplete = () => resolve();
+        tx.onerror = () =>
+          reject(tx.error || new Error("Ошибка импорта"));
+        tx.onabort = () =>
+          reject(tx.error || new Error("Импорт отменён"));
+      });
+    }
+
     async function importNotes(file) {
       try {
         if (file.size > MAX_IMPORT_BYTES) {
@@ -1910,77 +1961,116 @@
           ...importedFolders
         ])];
 
-        let count = 0;
+        const importedNotes = data.notes
+          .map(normalizeImportedNote)
+          .filter(Boolean);
 
-        for (const value of data.notes) {
-          const note = normalizeImportedNote(value);
-          if (!note) continue;
-
-          await putNote(note);
-          count++;
-        }
+        await commitImport(importedNotes, updatedFolders);
 
         folders = updatedFolders;
-        await saveFolders();
-
         notes = await getAllNotes();
         render();
 
-        notify(`Импортировано заметок: ${count}`);
+        notify(`Импортировано заметок: ${importedNotes.length}`);
       } catch (error) {
         console.error(error);
-
-        // Если ошибка произошла после части записей, показываем
-        // фактическое состояние базы, а не устаревший список.
-        try {
-          notes = await getAllNotes();
-          render();
-        } catch {}
-
-        notify("Не удалось полностью импортировать файл");
+        notify("Не удалось импортировать файл");
       }
     }
 
-    async function checkReminders() {
-      const now = Date.now();
-
-      for (const note of notes) {
-        if (!note.reminder || note.notified) continue;
-
-        const time = new Date(note.reminder).getTime();
-
-        if (!Number.isFinite(time) || time > now) continue;
-
-        note.notified = true;
+    // Читаем актуальную запись и отмечаем напоминание в одной транзакции.
+    // Это не даёт старой копии заметки затереть новые изменения.
+    function markReminderNotified(id, now) {
+      return new Promise((resolve, reject) => {
+        let tx;
+        let marked = null;
 
         try {
-          await putNote(note);
+          tx = db.transaction("notes", "readwrite");
+          const store = tx.objectStore("notes");
+          const request = store.get(id);
+
+          request.onsuccess = () => {
+            const note = request.result;
+
+            if (!note || !note.reminder || note.notified) return;
+
+            const time = new Date(note.reminder).getTime();
+
+            if (!Number.isFinite(time) || time > now) return;
+
+            note.notified = true;
+            marked = note;
+            store.put(note);
+          };
         } catch (error) {
-          note.notified = false;
-          console.error(error);
-          continue;
+          if (tx) tx.abort();
+          reject(error);
+          return;
         }
 
-        notify(`Напоминание: ${note.title || "Без названия"}`);
+        tx.oncomplete = () => resolve(marked);
+        tx.onerror = () =>
+          reject(tx.error || new Error("Ошибка напоминания"));
+        tx.onabort = () =>
+          reject(tx.error || new Error("Напоминание отменено"));
+      });
+    }
 
-        if (
-          "Notification" in window &&
-          Notification.permission === "granted"
-        ) {
+    async function checkReminders() {
+      if (checkingReminders) return;
+
+      checkingReminders = true;
+
+      try {
+        const now = Date.now();
+
+        for (const candidate of notes) {
+          if (!candidate.reminder || candidate.notified) continue;
+
+          let marked;
+
           try {
-            new Notification(
-              note.title || "Напоминание",
-              {
-                body: (
-                  note.text || "Пора заглянуть в заметку"
-                ).slice(0, 120)
-              }
-            );
-          } catch {
-            // В некоторых браузерах системные уведомления
-            // недоступны даже при выданном разрешении.
+            marked = await markReminderNotified(candidate.id, now);
+          } catch (error) {
+            console.error(error);
+            continue;
+          }
+
+          if (!marked) continue;
+
+          const index = notes.findIndex(note => note.id === marked.id);
+
+          if (index !== -1) {
+            notes[index] = marked;
+          }
+
+          if (draft?.id === marked.id) {
+            draft.notified = true;
+          }
+
+          notify(`Напоминание: ${marked.title || "Без названия"}`);
+
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            try {
+              new Notification(
+                marked.title || "Напоминание",
+                {
+                  body: (
+                    marked.text || "Пора заглянуть в заметку"
+                  ).slice(0, 120)
+                }
+              );
+            } catch {
+              // Системные уведомления доступны не во всех браузерах.
+            }
           }
         }
+      } finally {
+        checkingReminders = false;
       }
     }
 
@@ -2017,6 +2107,7 @@
         $("#newNote").disabled = true;
         $("#importButton").disabled = true;
         $("#exportButton").disabled = true;
+        $("#addFolder").disabled = true;
         return;
       }
 
@@ -2072,14 +2163,14 @@
           return;
         }
 
-        folders.push(name);
+        const updatedFolders = [...folders, name];
 
         try {
-          await saveFolders();
+          await saveFolders(updatedFolders);
+          folders = updatedFolders;
           render();
           notify("Папка создана");
         } catch (error) {
-          folders.pop();
           console.error(error);
           notify("Не удалось сохранить папку");
         }
@@ -2115,26 +2206,37 @@
         if (
           !draft ||
           saving ||
+          $("#editor").classList.contains("closing") ||
           !confirm("Удалить эту заметку?")
         ) {
           return;
         }
+
+        saving = true;
+        $("#deleteNote").disabled = true;
+        $("#saveNote").disabled = true;
 
         try {
           await removeNote(draft.id);
           notes = await getAllNotes();
           render();
 
-          await closeEditor(true);
+          closeEditor(true);
           notify("Заметка удалена");
         } catch (error) {
           console.error(error);
           notify("Не удалось удалить заметку");
+        } finally {
+          saving = false;
+          $("#deleteNote").disabled = false;
+          $("#saveNote").disabled = false;
         }
       };
 
       $("#pinNote").onclick = () => {
-        if (!draft) return;
+        if (!draft || $("#editor").classList.contains("closing")) {
+          return;
+        }
 
         draft.pinned = !draft.pinned;
         updatePinButton();
@@ -2148,9 +2250,7 @@
             await $("#editor").requestFullscreen();
           }
         } catch {
-          notify(
-            "Браузер не разрешил полноэкранный режим"
-          );
+          notify("Браузер не разрешил полноэкранный режим");
         }
       };
 
@@ -2161,8 +2261,6 @@
             : "⛶ На весь экран";
       });
 
-      // Сохраняем выделение до потери фокуса при нажатии
-      // на кнопку панели форматирования.
       $("#toolbar").addEventListener("pointerdown", event => {
         if (event.target.closest("[data-format]")) {
           rememberSelection();
@@ -2171,8 +2269,7 @@
       });
 
       $("#toolbar").onclick = event => {
-        const button =
-          event.target.closest("[data-format]");
+        const button = event.target.closest("[data-format]");
 
         if (button) {
           formatSelection(button.dataset.format);
@@ -2193,10 +2290,7 @@
         }
 
         const row = event.target.closest(".todo-row");
-        row?.classList.toggle(
-          "done",
-          event.target.checked
-        );
+        row?.classList.toggle("done", event.target.checked);
       });
 
       $("#noteBody").addEventListener("click", event => {
@@ -2207,8 +2301,8 @@
         }
       });
 
-      // Вставляем из буфера обычный текст: оформление из чужих
-      // страниц не ломает редактор и не приносит опасный HTML.
+      // Вставляем текст без сторонней HTML-разметки.
+      // Для многострочного текста сохраняем переносы как <br>.
       $("#noteBody").addEventListener("paste", event => {
         const text =
           event.clipboardData?.getData("text/plain");
@@ -2230,11 +2324,27 @@
           return;
         }
 
-        const node = document.createTextNode(text);
+        const lines = text.replace(/\r\n?/g, "\n").split("\n");
+        const fragment = document.createDocumentFragment();
+        let lastNode = null;
+
+        lines.forEach((line, index) => {
+          if (index > 0) {
+            lastNode = document.createElement("br");
+            fragment.append(lastNode);
+          }
+
+          if (line) {
+            lastNode = document.createTextNode(line);
+            fragment.append(lastNode);
+          }
+        });
+
+        if (!lastNode) return;
 
         range.deleteContents();
-        range.insertNode(node);
-        putCaretAfter(node);
+        range.insertNode(fragment);
+        putCaretAfter(lastNode);
       });
 
       $("#addImage").onclick = () => $("#imageInput").click();
@@ -2251,7 +2361,9 @@
       };
 
       $("#addLink").onclick = () => {
-        if (!draft) return;
+        if (!draft || $("#editor").classList.contains("closing")) {
+          return;
+        }
 
         let url = prompt("Вставьте ссылку:");
         if (!url) return;
@@ -2265,9 +2377,7 @@
         const valid = safeLink(url);
 
         if (!valid) {
-          notify(
-            "Нужна ссылка вида https://example.com"
-          );
+          notify("Нужна ссылка вида https://example.com");
           return;
         }
 
@@ -2312,6 +2422,7 @@
           !$("#editor").hidden &&
           draft &&
           !saving &&
+          !$("#editor").classList.contains("closing") &&
           formSnapshot() !== initialSnapshot
         ) {
           event.preventDefault();
