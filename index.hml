@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7" id="themeColor">
+  <title>Заметки</title>
+
+  <script>
+    try {
+      document.documentElement.dataset.theme =
+        localStorage.getItem("notes-theme") === "dark"
+          ? "dark"
+          : "light";
+    } catch {
+      document.documentElement.dataset.theme = "light";
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f5f5f7;
+      --sidebar: #ececf0;
+      --surface: #fff;
+      --soft: #f0f0f3;
+      --hover: #e5e5ea;
+      --border: #e5e5ea;
+      --text: #25252b;
+      --muted: #84848f;
+      --accent: #f4c543;
+      --accent-hover: #ffd35d;
+      --accent-text: #342900;
+      --shadow: 0 10px 30px #2525360c;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #111218;
+      --sidebar: #191a22;
+      --surface: #20212b;
+      --soft: #292a36;
+      --hover: #333441;
+      --border: #373844;
+      --text: #f1f1f5;
+      --muted: #a1a1ae;
+      --accent: #f4c543;
+      --accent-hover: #ffd35d;
+      --accent-text: #342900;
+      --shadow: 0 10px 30px #0004;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--text);
+    }
+
+    body, aside, main, .editor, .card, .tool, input, select, .note-body {
+      transition:
+        background-color .3s ease,
+        color .3s ease,
+        border-color .3s ease,
+        box-shadow .3s ease;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    [contenteditable]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px 14px;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar);
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .aside-top, .topbar, .editor-header, .editor-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      padding-left: 10px;
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      white-space: nowrap;
+    }
+
+    .brand span {
+      color: #e5ae1f;
+    }
+
+    .nav-title {
+      margin: 0 12px 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    .nav {
+      width: 100%;
+      padding: 11px 13px;
+      border: 0;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      transition: transform .2s ease, background-color .2s ease;
+    }
+
+    .nav:hover {
+      background: var(--hover);
+      transform: translateX(3px);
+    }
+
+    .nav.active {
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      font-weight: 700;
+    }
+
+    .count {
+      color: var(--muted);
+    }
+
+    main {
+      width: min(100%, 1120px);
+      padding: 26px 42px 70px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      margin-bottom: 38px;
+    }
+
+    .top-left, .top-right, .editor-left, .editor-right {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .icon, .soft, .tool {
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
+      transition:
+        transform .2s ease,
+        background-color .25s ease,
+        border-color .25s ease;
+    }
+
+    .icon:hover, .soft:hover, .tool:hover {
+      transform: translateY(-2px);
+      background: var(--hover);
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 40px;
+      font-size: 20px;
+    }
+
+    .soft {
+      padding: 10px 13px;
+    }
+
+    .primary {
+      padding: 11px 17px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 750;
+      transition: transform .2s ease, background-color .2s ease;
+    }
+
+    .primary:hover {
+      transform: translateY(-2px);
+      background: var(--accent-hover);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 48px);
+      letter-spacing: -2px;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .search {
+      width: 100%;
+      height: 46px;
+      margin: 25px 0 22px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      min-height: 155px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+      box-shadow: var(--shadow);
+      animation: appear .3s ease both;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px #0002;
+    }
+
+    .card-title {
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .preview {
+      min-height: 55px;
+      margin: 13px 0 17px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
+    }
+
+    .card-foot {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      padding: 65px 20px;
+      border: 1px dashed var(--border);
+      border-radius: 15px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .editor {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      animation: editor-in .3s ease both;
+    }
+
+    .editor.closing {
+      animation: editor-out .22s ease both;
+      pointer-events: none;
+    }
+
+    .editor-header {
+      flex: 0 0 auto;
+      min-height: 68px;
+      padding: 10px clamp(16px, 4vw, 48px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .editor-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .editor-inner {
+      width: min(100%, 960px);
+      min-height: 100%;
+      margin: auto;
+      padding: 38px clamp(20px, 5vw, 55px) 70px;
+    }
+
+    .kicker, .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .title-input {
+      width: 100%;
+      margin: 18px 0 15px;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: clamp(34px, 5vw, 52px);
+      font-weight: 760;
+      letter-spacing: -1.6px;
+    }
+
+    .title-input::placeholder,
+    .note-body:empty::before {
+      color: var(--muted);
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .tool {
+      min-height: 38px;
+      padding: 7px 11px;
+      font-size: 13px;
+    }
+
+    .tool b, .tool i, .tool s {
+      font-size: 15px;
+    }
+
+    .note-body {
+      min-height: 32vh;
+      padding: 22px 2px;
+      outline: none;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.75;
+      overflow-wrap: anywhere;
+    }
+
+    .note-body:empty::before {
+      content: "Начните писать или выделите текст для форматирования…";
+      pointer-events: none;
+    }
+
+    .note-body code {
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--soft);
+      color: var(--text);
+      font: .9em/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+      cursor: copy;
+    }
+
+    .note-body code:hover {
+      background: var(--hover);
+    }
+
+    .todo-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 7px 0;
+    }
+
+    .todo-row input {
+      flex: 0 0 18px;
+      width: 18px;
+      height: 18px;
+      margin: 7px 0 0;
+      accent-color: #e5ae1f;
+      cursor: pointer;
+    }
+
+    .todo-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .todo-row.done .todo-text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .hint {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .attachment {
+      position: relative;
+      width: 130px;
+      min-height: 95px;
+      border-radius: 10px;
+      background: var(--soft);
+      overflow: hidden;
+    }
+
+    .attachment img {
+      display: block;
+      width: 130px;
+      height: 95px;
+      object-fit: cover;
+    }
+
+    .attachment a {
+      display: block;
+      padding: 14px 10px;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .attachment button {
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      width: 25px;
+      height: 25px;
+      border: 0;
+      border-radius: 50%;
+      background: #262630e0;
+      color: white;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 1px solid var(--border);
+    }
+
+    .meta label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .meta input, .meta select {
+      min-width: 0;
+      height: 42px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .editor-footer {
+      flex: 0 0 auto;
+      min-height: 72px;
+      padding: 10px clamp(16px, 4vw, 48px);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .footer-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .danger {
+      color: #e36b6b;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 100;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: calc(100vw - 25px);
+      padding: 11px 16px;
+      border-radius: 10px;
+      background: #34343d;
+      color: white;
+      text-align: center;
+      font-size: 14px;
+      box-shadow: 0 8px 25px #0004;
+    }
+
+    .mobile-only {
+      display: none;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes editor-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes editor-out {
+      to { opacity: 0; transform: translateY(12px); }
+    }
+
+    @media (max-width: 700px) {
+      .app {
+        display: block;
+      }
+
+      aside {
+        position: fixed;
+        z-index: 12;
+        left: 0;
+        width: min(82vw, 280px);
+        transform: translateX(-100%);
+        transition: transform .25s ease, background-color .3s ease;
+      }
+
+      aside.open {
+        transform: translateX(0);
+      }
+
+      .backdrop:not([hidden]) {
+        position: fixed;
+        z-index: 11;
+        inset: 0;
+        display: block;
+        width: 100%;
+        border: 0;
+        background: #0008;
+      }
+
+      .mobile-only {
+        display: inline-block;
+      }
+
+      main {
+        padding: 17px 17px 60px;
+      }
+
+      .topbar {
+        margin-bottom: 28px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-inner {
+        padding: 28px 19px 50px;
+      }
+
+      .editor-header, .editor-footer {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .meta {
+        grid-template-columns: 1fr;
+      }
+
+      .tool {
+        font-size: 12px;
+        padding: 7px 9px;
+      }
+
+      #fullscreenButton {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside id="sidebar">
+      <div class="aside-top">
+        <div class="brand">Заметки<span>.</span></div>
+
+        <button
+          class="icon theme-toggle"
+          type="button"
+          aria-label="Переключить тему"
+        >☾</button>
+      </div>
+
+      <div>
+        <div class="nav-title">Библиотека</div>
+
+        <button class="nav active" data-view="all">
+          Все заметки <span class="count" id="allCount">0</span>
+        </button>
+
+        <button class="nav" data-view="pinned">
+          Закреплённые <span class="count" id="pinnedCount">0</span>
+        </button>
+      </div>
+
+      <div>
+        <div class="nav-title">Папки</div>
+        <div id="folderNav"></div>
+        <button class="nav" id="addFolder">＋ Новая папка</button>
+      </div>
+
+      <div style="margin-top:auto">
+        <button class="nav" id="shareSide">↗ Поделиться списком</button>
+      </div>
+    </aside>
+
+    <button class="backdrop" id="backdrop" hidden aria-label="Закрыть меню"></button>
+
+    <main>
+      <div class="topbar">
+        <div class="top-left">
+          <button class="icon mobile-only" id="openSidebar" aria-label="Открыть меню">☰</button>
+          <button class="icon theme-toggle" type="button" aria-label="Переключить тему">☾</button>
+        </div>
+
+        <div class="top-right">
+          <button class="soft" id="exportButton" title="Сохранить резервную копию">↓</button>
+          <button class="soft" id="importButton" title="Импортировать резервную копию">↑</button>
+          <button class="primary" id="newNote">＋ Новая заметка</button>
+        </div>
+      </div>
+
+      <h1 id="pageTitle">Все заметки</h1>
+      <p class="subtitle" id="pageSubtitle">Ваши мысли — в одном месте.</p>
+
+      <input
+        class="search"
+        id="search"
+        type="search"
+        placeholder="Поиск по заметкам, тегам и папкам…"
+        aria-label="Поиск заметок"
+      >
+
+      <div class="grid" id="notesGrid"></div>
+    </main>
+  </div>
+
+  <section class="editor" id="editor" aria-label="Редактор заметки" hidden>
+    <header class="editor-header">
+      <div class="editor-left">
+        <button class="icon theme-toggle" type="button" aria-label="Переключить тему">☾</button>
+        <button class="soft" id="closeEditor">← Назад</button>
+      </div>
+
+      <div class="editor-right">
+        <button class="soft" id="fullscreenButton">⛶ На весь экран</button>
+      </div>
+    </header>
+
+    <div class="editor-scroll">
+      <div class="editor-inner">
+        <div class="kicker" id="editorKicker">НОВАЯ ЗАМЕТКА</div>
+
+        <input
+          class="title-input"
+          id="noteTitle"
+          maxlength="120"
+          placeholder="Название заметки"
+          aria-label="Название заметки"
+        >
+
+        <div class="toolbar" id="toolbar" aria-label="Форматирование текста">
+          <button class="tool" data-format="todo" title="Превратить выделенный текст в туду-лист">
+            ☑ Туду-лист
+          </button>
+
+          <button class="tool" data-format="code" title="Моноширинный текст. Нажмите на него для копирования">
+            &lt;/&gt; Моноширинный
+          </button>
+
+          <button class="tool" data-format="bold" title="Жирный текст">
+            <b>Жирный</b>
+          </button>
+
+          <button class="tool" data-format="italic" title="Курсив">
+            <i>Курсив</i>
+          </button>
+
+          <button class="tool" data-format="strike" title="Зачёркнутый текст">
+            <s>Зачёркнутый</s>
+          </button>
+        </div>
+
+        <div
+          id="noteBody"
+          class="note-body"
+          contenteditable="true"
+          role="textbox"
+          aria-label="Текст заметки"
+          aria-multiline="true"
+          spellcheck="true"
+        ></div>
+
+        <div class="hint">
+          Выдели текст и нажми кнопку сверху. Нажатие на моноширинный текст копирует его.
+        </div>
+
+        <div id="attachmentsSection" hidden>
+          <div class="label" style="margin-top:30px">Вложения</div>
+          <div class="attachments" id="attachments"></div>
+        </div>
+
+        <div class="meta">
+          <label>
+            Папка
+            <select id="noteFolder"></select>
+          </label>
+
+          <label>
+            Теги через запятую
+            <input id="noteTags" placeholder="идеи, работа">
+          </label>
+
+          <label>
+            Напомнить
+            <input id="noteReminder" type="datetime-local">
+          </label>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px">
+          <button class="soft" id="addImage">＋ Картинка</button>
+          <button class="soft" id="addFile">＋ Файл</button>
+          <button class="soft" id="addLink">＋ Ссылка</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="editor-footer">
+      <div class="footer-left">
+        <button class="soft" id="pinNote">☆ Закрепить</button>
+        <button class="soft danger" id="deleteNote" hidden>Удалить</button>
+      </div>
+
+      <button class="primary" id="saveNote">Сохранить</button>
+    </footer>
+  </section>
+
+  <input type="file" id="imageInput" accept="image/*" multiple hidden>
+  <input type="file" id="fileInput" multiple hidden>
+  <input type="file" id="importInput" accept=".json,application/json" hidden>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script>
+    "use strict";
+
+    const $ = selector => document.querySelector(selector);
+
+    // Та же база, что в предыдущей версии блокнота.
+    const DB_NAME = "beautiful-notes-db";
+    const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+    let db;
+    let notes = [];
+    let folders = ["Личные", "Работа", "Идеи"];
+    let currentView = "all";
+    let draft = null;
+    let savedRange = null;
+    let toastTimer;
+    let closeTimer;
+
+    function uid() {
+      return crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now() + "-" + Math.random().toString(36).slice(2);
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function notify(message) {
+      const toast = $("#toast");
+
+      toast.textContent = message;
+      toast.hidden = false;
+
+      clearTimeout(toastTimer);
+
+      toastTimer = setTimeout(() => {
+        toast.hidden = true;
+      }, 3200);
+    }
+
+    function setTheme(theme) {
+      const dark = theme === "dark";
+
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+      $("#themeColor").content = dark ? "#111218" : "#f5f5f7";
+
+      document.querySelectorAll(".theme-toggle").forEach(button => {
+        button.textContent = dark ? "☀" : "☾";
+        button.title = dark ? "Включить светлую тему" : "Включить тёмную тему";
+        button.setAttribute("aria-label", button.title);
+      });
+
+      try {
+        localStorage.setItem("notes-theme", dark ? "dark" : "light");
+      } catch {}
+    }
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onupgradeneeded = () => {
+          const database = request.result;
+
+          database.createObjectStore("notes", { keyPath: "id" });
+          database.createObjectStore("settings", { keyPath: "key" });
+        };
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function transaction(storeName, mode, callback) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, mode);
+        const request = callback(tx.objectStore(storeName));
+
+        let result;
+
+        request.onsuccess = () => {
+          result = request.result;
+        };
+
+        tx.oncomplete = () => resolve(result);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+    }
+
+    const getAllNotes = () =>
+      transaction("notes", "readonly", store => store.getAll());
+
+    const putNote = note =>
+      transaction("notes", "readwrite", store => store.put(note));
+
+    const removeNote = id =>
+      transaction("notes", "readwrite", store => store.delete(id));
+
+    const getSavedFolders = () =>
+      transaction("settings", "readonly", store => store.get("folders"));
+
+    const saveFolders = () =>
+      transaction("settings", "readwrite", store =>
+        store.put({ key: "folders", value: folders })
+      );
+
+    function formatDate(value) {
+      return new Intl.DateTimeFormat("ru", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      }).format(value || Date.now());
+    }
+
+    function closeSidebar() {
+      $("#sidebar").classList.remove("open");
+      $("#backdrop").hidden = true;
+    }
+
+    function visibleNotes() {
+      const query = $("#search").value.trim().toLocaleLowerCase("ru");
+
+      return notes.filter(note => {
+        if (currentView === "pinned" && !note.pinned) return false;
+
+        if (
+          currentView.startsWith("folder:") &&
+          note.folder !== currentView.slice(7)
+        ) return false;
+
+        const searchable = [
+          note.title,
+          note.text,
+          note.folder,
+          ...(note.tags || []),
+          ...(note.checks || []).map(item => item.text)
+        ].join(" ").toLocaleLowerCase("ru");
+
+        return searchable.includes(query);
+      }).sort((a, b) =>
+        Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) ||
+        (b.updatedAt || 0) - (a.updatedAt || 0)
+      );
+    }
+
+    function render() {
+      $("#allCount").textContent = notes.length;
+      $("#pinnedCount").textContent = notes.filter(note => note.pinned).length;
+
+      document.querySelectorAll("[data-view]").forEach(button => {
+        button.classList.toggle(
+          "active",
+          button.dataset.view === currentView
+        );
+      });
+
+      $("#folderNav").innerHTML = folders.map(folder => {
+        const count = notes.filter(note => note.folder === folder).length;
+
+        return `
+          <button
+            class="nav ${currentView === "folder:" + folder ? "active" : ""}"
+            data-folder="${escapeHTML(folder)}"
+          >
+            <span>▤ ${escapeHTML(folder)}</span>
+            <span class="count">${count}</span>
+          </button>
+        `;
+      }).join("");
+
+      $("#pageTitle").textContent =
+        currentView === "all"
+          ? "Все заметки"
+          : currentView === "pinned"
+            ? "Закреплённые"
+            : currentView.slice(7);
+
+      const shown = visibleNotes();
+
+      $("#pageSubtitle").textContent =
+        `${shown.length} заметок · Ваши мысли — в одном месте.`;
+
+      $("#notesGrid").innerHTML = shown.length
+        ? shown.map(note => `
+          <button class="card" data-id="${escapeHTML(note.id)}">
+            <div class="card-title">
+              ${escapeHTML(note.title || "Без названия")}
+              ${note.pinned ? " ★" : ""}
+            </div>
+
+            <div class="preview">
+              ${escapeHTML(
+                note.text ||
+                (note.attachments?.length ? "Вложения" : "Пустая заметка")
+              )}
+            </div>
+
+            <div class="card-foot">
+              ${formatDate(note.updatedAt)}
+              ${note.folder ? " · " + escapeHTML(note.folder) : ""}
+              ${note.attachments?.length
+                ? " · ▧ " + note.attachments.length
+                : ""}
+            </div>
+          </button>
+        `).join("")
+        : `<div class="empty">Пока здесь пусто. Создайте заметку!</div>`;
+    }
+
+    function renderFolderOptions() {
+      $("#noteFolder").innerHTML =
+        `<option value="">Без папки</option>` +
+        folders.map(folder => `
+          <option value="${escapeHTML(folder)}">
+            ${escapeHTML(folder)}
+          </option>
+        `).join("");
+    }
+
+    /*
+      Очищаем HTML перед показом и сохранением.
+      Разрешены только элементы форматирования нашего редактора.
+      Это важно и для старых заметок, и для импортированных данных.
+    */
+    function sanitizeRichHTML(html) {
+      const source = document.createElement("div");
+      source.innerHTML = String(html || "");
+
+      const allowed = new Set([
+        "DIV", "P", "BR", "STRONG", "B",
+        "EM", "I", "S", "STRIKE", "CODE", "SPAN"
+      ]);
+
+      function cleanNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return document.createTextNode(node.textContent);
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+          return document.createDocumentFragment();
+        }
+
+        if (node.tagName === "INPUT") {
+          if (node.type !== "checkbox") {
+            return document.createDocumentFragment();
+          }
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = node.checked || node.hasAttribute("checked");
+
+          return checkbox;
+        }
+
+        if (!allowed.has(node.tagName)) {
+          const fragment = document.createDocumentFragment();
+
+          node.childNodes.forEach(child => {
+            fragment.append(cleanNode(child));
+          });
+
+          return fragment;
+        }
+
+        const element = document.createElement(node.tagName.toLowerCase());
+
+        if (
+          node.tagName === "DIV" &&
+          node.classList.contains("todo-row")
+        ) {
+          element.className = "todo-row";
+
+          if (node.classList.contains("done")) {
+            element.classList.add("done");
+          }
+        }
+
+        if (
+          node.tagName === "SPAN" &&
+          node.classList.contains("todo-text")
+        ) {
+          element.className = "todo-text";
+        }
+
+        node.childNodes.forEach(child => {
+          element.append(cleanNode(child));
+        });
+
+        return element;
+      }
+
+      const result = document.createElement("div");
+
+      source.childNodes.forEach(node => {
+        result.append(cleanNode(node));
+      });
+
+      return result.innerHTML;
+    }
+
+    function safeLink(value) {
+      try {
+        const url = new URL(value);
+
+        return ["http:", "https:"].includes(url.protocol)
+          ? url.href
+          : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function renderAttachments() {
+      const container = $("#attachments");
+      container.replaceChildren();
+
+      $("#attachmentsSection").hidden = !draft.attachments.length;
+
+      draft.attachments.forEach((attachment, index) => {
+        const box = document.createElement("div");
+        box.className = "attachment";
+
+        if (attachment.kind === "image") {
+          const image = document.createElement("img");
+          image.src = attachment.data;
+          image.alt = attachment.name;
+
+          box.append(image);
+        } else {
+          const link = document.createElement("a");
+
+          link.href = attachment.kind === "link"
+            ? safeLink(attachment.url) || "#"
+            : attachment.data || "#";
+
+          link.textContent =
+            (attachment.kind === "link" ? "↗ " : "▤ ") +
+            attachment.name;
+
+          if (attachment.kind === "link") {
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+          } else {
+            link.download = attachment.name;
+          }
+
+          box.append(link);
+        }
+
+        const remove = document.createElement("button");
+
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.title = "Удалить вложение";
+
+        remove.onclick = () => {
+          draft.attachments.splice(index, 1);
+          renderAttachments();
+        };
+
+        box.append(remove);
+        container.append(box);
+      });
+    }
+
+    function updatePinButton() {
+      $("#pinNote").textContent =
+        draft.pinned ? "★ Закреплено" : "☆ Закрепить";
+    }
+
+    function openEditor(note = null) {
+      clearTimeout(closeTimer);
+
+      const editor = $("#editor");
+
+      editor.classList.remove("closing");
+
+      draft = note
+        ? structuredClone(note)
+        : {
+            id: uid(),
+            title: "",
+            text: "",
+            richHTML: "",
+            folder: currentView.startsWith("folder:")
+              ? currentView.slice(7)
+              : "",
+            tags: [],
+            checks: [],
+            attachments: [],
+            reminder: "",
+            notified: false,
+            pinned: false,
+            createdAt: Date.now()
+          };
+
+      draft.tags ||= [];
+      draft.checks ||= [];
+      draft.attachments ||= [];
+
+      renderFolderOptions();
+
+      $("#editorKicker").textContent =
+        note ? "РЕДАКТИРОВАНИЕ ЗАМЕТКИ" : "НОВАЯ ЗАМЕТКА";
+
+      $("#noteTitle").value = draft.title || "";
+      $("#noteFolder").value = draft.folder || "";
+      $("#noteTags").value = draft.tags.join(", ");
+      $("#noteReminder").value = draft.reminder || "";
+      $("#deleteNote").hidden = !note;
+
+      /*
+        Старые обычные заметки открываются как текст.
+        Старые пункты списка переносим внутрь нового редактора.
+      */
+      const body = $("#noteBody");
+
+      body.innerHTML = draft.richHTML
+        ? sanitizeRichHTML(draft.richHTML)
+        : escapeHTML(draft.text || "").replace(/\n/g, "<br>");
+
+      for (const item of draft.checks) {
+        const row = createTodoRow(item.text, item.done);
+        body.append(row);
+      }
+
+      draft.checks = [];
+
+      renderAttachments();
+      updatePinButton();
+
+      savedRange = null;
+
+      editor.hidden = false;
+      $(".editor-scroll").scrollTop = 0;
+      document.body.style.overflow = "hidden";
+
+      $("#noteTitle").focus();
+    }
+
+    async function closeEditor() {
+      const editor = $("#editor");
+
+      if (editor.hidden || editor.classList.contains("closing")) return;
+
+      if (document.fullscreenElement === editor) {
+        try {
+          await document.exitFullscreen();
+        } catch {}
+      }
+
+      editor.classList.add("closing");
+
+      closeTimer = setTimeout(() => {
+        editor.hidden = true;
+        editor.classList.remove("closing");
+        document.body.style.overflow = "";
+        draft = null;
+        savedRange = null;
+      }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 220);
+    }
+
+    function createTodoRow(text = "", done = false) {
+      const row = document.createElement("div");
+      row.className = "todo-row";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(done);
+      checkbox.setAttribute("aria-label", "Отметить выполненным");
+
+      const content = document.createElement("span");
+      content.className = "todo-text";
+      content.textContent = text || "\u200B";
+
+      if (done) row.classList.add("done");
+
+      row.append(checkbox, content);
+      return row;
+    }
+
+    /*
+      Запоминаем выделение внутри текста: нажатие кнопки панели
+      не должно его терять.
+    */
+    function rememberSelection() {
+      const selection = window.getSelection();
+
+      if (!selection || !selection.rangeCount) return;
+
+      const range = selection.getRangeAt(0);
+      const body = $("#noteBody");
+
+      if (
+        body.contains(range.startContainer) &&
+        body.contains(range.endContainer)
+      ) {
+        savedRange = range.cloneRange();
+      }
+    }
+
+    function restoreSelection() {
+      if (!savedRange) return null;
+
+      const body = $("#noteBody");
+
+      if (
+        !body.contains(savedRange.startContainer) ||
+        !body.contains(savedRange.endContainer)
+      ) {
+        return null;
+      }
+
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(savedRange);
+
+      return selection.getRangeAt(0);
+    }
+
+    function putCaretAfter(node) {
+      const range = document.createRange();
+
+      range.setStartAfter(node);
+      range.collapse(true);
+
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      savedRange = range.cloneRange();
+    }
+
+    function formatSelection(format) {
+      const range = restoreSelection();
+
+      if (!range) {
+        notify("Сначала выдели текст в заметке");
+        return;
+      }
+
+      const selectedText = window.getSelection().toString();
+
+      if (format === "todo") {
+        const lines = selectedText
+          ? selectedText.split(/\r?\n/).filter(line => line.trim())
+          : [""];
+
+        const fragment = document.createDocumentFragment();
+        const rows = lines.map(line => createTodoRow(line));
+
+        rows.forEach(row => fragment.append(row));
+
+        range.deleteContents();
+        range.insertNode(fragment);
+
+        if (rows.length) {
+          putCaretAfter(rows[rows.length - 1]);
+        }
+
+        notify("Туду-лист добавлен");
+        return;
+      }
+
+      if (!selectedText) {
+        notify("Сначала выдели текст, который нужно оформить");
+        return;
+      }
+
+      const tag = {
+        code: "code",
+        bold: "strong",
+        italic: "em",
+        strike: "s"
+      }[format];
+
+      if (!tag) return;
+
+      const wrapper = document.createElement(tag);
+
+      /*
+        Сохраняем выделенное содержимое, а не только обычный текст:
+        можно оформить фрагмент, в котором уже есть форматирование.
+      */
+      wrapper.append(range.extractContents());
+      range.insertNode(wrapper);
+
+      putCaretAfter(wrapper);
+
+      notify(
+        format === "code"
+          ? "Готово. Нажми на этот текст, чтобы скопировать"
+          : "Форматирование применено"
+      );
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        notify("Скопировано");
+      } catch {
+        const helper = document.createElement("textarea");
+
+        helper.value = text;
+        helper.style.position = "fixed";
+        helper.style.opacity = "0";
+
+        document.body.append(helper);
+        helper.select();
+
+        const success = document.execCommand("copy");
+
+        helper.remove();
+
+        notify(success ? "Скопировано" : "Не удалось скопировать");
+      }
+    }
+
+    async function saveEditor() {
+      if (!draft || $("#editor").classList.contains("closing")) return;
+
+      const body = $("#noteBody");
+
+      /*
+        checked у checkbox — свойство, а не надёжный HTML-атрибут.
+        Перед сохранением переносим его в атрибут.
+      */
+      body.querySelectorAll(".todo-row").forEach(row => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+
+        if (!checkbox) return;
+
+        row.classList.toggle("done", checkbox.checked);
+
+        if (checkbox.checked) {
+          checkbox.setAttribute("checked", "");
+        } else {
+          checkbox.removeAttribute("checked");
+        }
+      });
+
+      draft.title = $("#noteTitle").value.trim();
+      draft.richHTML = sanitizeRichHTML(body.innerHTML);
+      draft.text = body.innerText.replace(/\u200B/g, "").trim();
+      draft.folder = $("#noteFolder").value;
+      draft.tags = [...new Set(
+        $("#noteTags").value.split(",").map(tag => tag.trim()).filter(Boolean)
+      )];
+
+      if (draft.reminder !== $("#noteReminder").value) {
+        draft.notified = false;
+      }
+
+      draft.reminder = $("#noteReminder").value;
+      draft.updatedAt = Date.now();
+
+      try {
+        await putNote(draft);
+
+        notes = await getAllNotes();
+        render();
+
+        await closeEditor();
+        notify("Заметка сохранена");
+      } catch (error) {
+        console.error(error);
+        notify("Не удалось сохранить заметку. Проверь свободное место");
+      }
+    }
+
+    function readAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFiles(files, imagesOnly) {
+      if (!draft) return;
+
+      for (const file of files) {
+        if (file.size > MAX_FILE_BYTES) {
+          notify(`Файл «${file.name}» больше 5 МБ`);
+          continue;
+        }
+
+        if (imagesOnly && !file.type.startsWith("image/")) continue;
+
+        try {
+          draft.attachments.push({
+            id: uid(),
+            kind: imagesOnly ? "image" : "file",
+            name: file.name,
+            data: await readAsDataURL(file)
+          });
+        } catch {
+          notify(`Не удалось прочитать «${file.name}»`);
+        }
+      }
+
+      renderAttachments();
+    }
+
+    function shareText() {
+      return visibleNotes().map(note => [
+        note.title || "Без названия",
+        note.text || "",
+        (note.tags || []).map(tag => "#" + tag).join(" ")
+      ].filter(Boolean).join("\n")).join("\n\n──────────\n\n");
+    }
+
+    async function shareNotes() {
+      const text = shareText();
+
+      if (!text) {
+        notify("Нет заметок, которыми можно поделиться");
+        return;
+      }
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Мои заметки", text });
+          return;
+        } catch (error) {
+          if (error.name === "AbortError") return;
+        }
+      }
+
+      await copyText(text);
+    }
+
+    function exportNotes() {
+      const data = JSON.stringify({ version: 2, folders, notes }, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "zametki-backup.json";
+      link.click();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function importNotes(file) {
+      try {
+        const data = JSON.parse(await file.text());
+
+        if (!Array.isArray(data.notes) || !Array.isArray(data.folders)) {
+          throw new Error("Неверный формат");
+        }
+
+        if (!confirm(`Импортировать ${data.notes.length} заметок?`)) return;
+
+        folders = [...new Set([
+          ...folders,
+          ...data.folders.filter(value =>
+            typeof value === "string" && value.trim()
+          )
+        ])];
+
+        await saveFolders();
+
+        let count = 0;
+
+        for (const note of data.notes) {
+          if (
+            !note ||
+            typeof note.id !== "string" ||
+            typeof note.title !== "string"
+          ) continue;
+
+          if (note.richHTML) {
+            note.richHTML = sanitizeRichHTML(note.richHTML);
+          }
+
+          await putNote(note);
+          count++;
+        }
+
+        notes = await getAllNotes();
+        render();
+
+        notify(`Импортировано заметок: ${count}`);
+      } catch (error) {
+        console.error(error);
+        notify("Не удалось импортировать файл");
+      }
+    }
+
+    async function checkReminders() {
+      const now = Date.now();
+
+      for (const note of notes) {
+        if (
+          !note.reminder ||
+          note.notified ||
+          new Date(note.reminder).getTime() > now
+        ) continue;
+
+        note.notified = true;
+
+        try {
+          await putNote(note);
+        } catch {}
+
+        notify(`Напоминание: ${note.title || "Без названия"}`);
+
+        if (
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          new Notification(note.title || "Напоминание", {
+            body: (note.text || "Пора заглянуть в заметку").slice(0, 120)
+          });
+        }
+      }
+    }
+
+    async function init() {
+      setTheme(document.documentElement.dataset.theme);
+
+      document.querySelectorAll(".theme-toggle").forEach(button => {
+        button.onclick = () => {
+          setTheme(
+            document.documentElement.dataset.theme === "dark"
+              ? "light"
+              : "dark"
+          );
+        };
+      });
+
+      try {
+        db = await openDB();
+        notes = await getAllNotes();
+
+        const saved = await getSavedFolders();
+
+        if (Array.isArray(saved?.value)) {
+          folders = saved.value;
+        }
+      } catch (error) {
+        console.error(error);
+        notify("Не удалось открыть хранилище браузера");
+        $("#newNote").disabled = true;
+        return;
+      }
+
+      render();
+      checkReminders();
+      setInterval(checkReminders, 30000);
+
+      $("#newNote").onclick = () => openEditor();
+      $("#search").oninput = render;
+
+      $("#notesGrid").onclick = event => {
+        const card = event.target.closest("[data-id]");
+
+        if (!card) return;
+
+        const note = notes.find(item => item.id === card.dataset.id);
+
+        if (note) openEditor(note);
+      };
+
+      document.querySelectorAll("[data-view]").forEach(button => {
+        button.onclick = () => {
+          currentView = button.dataset.view;
+          closeSidebar();
+          render();
+        };
+      });
+
+      $("#folderNav").onclick = event => {
+        const button = event.target.closest("[data-folder]");
+
+        if (!button) return;
+
+        currentView = "folder:" + button.dataset.folder;
+        closeSidebar();
+        render();
+      };
+
+      $("#addFolder").onclick = async () => {
+        const name = prompt("Название новой папки:")?.trim();
+
+        if (!name) return;
+
+        if (
+          folders.some(folder =>
+            folder.toLocaleLowerCase("ru") ===
+            name.toLocaleLowerCase("ru")
+          )
+        ) {
+          notify("Такая папка уже есть");
+          return;
+        }
+
+        folders.push(name);
+        await saveFolders();
+        render();
+      };
+
+      $("#openSidebar").onclick = () => {
+        $("#sidebar").classList.add("open");
+        $("#backdrop").hidden = false;
+      };
+
+      $("#backdrop").onclick = closeSidebar;
+
+      $("#shareSide").onclick = () => {
+        closeSidebar();
+        shareNotes();
+      };
+
+      $("#exportButton").onclick = exportNotes;
+      $("#importButton").onclick = () => $("#importInput").click();
+
+      $("#importInput").onchange = async event => {
+        if (event.target.files[0]) {
+          await importNotes(event.target.files[0]);
+        }
+
+        event.target.value = "";
+      };
+
+      $("#closeEditor").onclick = closeEditor;
+      $("#saveNote").onclick = saveEditor;
+
+      $("#deleteNote").onclick = async () => {
+        if (!draft || !confirm("Удалить эту заметку?")) return;
+
+        await removeNote(draft.id);
+
+        notes = await getAllNotes();
+        render();
+
+        await closeEditor();
+        notify("Заметка удалена");
+      };
+
+      $("#pinNote").onclick = () => {
+        draft.pinned = !draft.pinned;
+        updatePinButton();
+      };
+
+      $("#fullscreenButton").onclick = async () => {
+        try {
+          if (document.fullscreenElement === $("#editor")) {
+            await document.exitFullscreen();
+          } else {
+            await $("#editor").requestFullscreen();
+          }
+        } catch {
+          notify("Браузер не разрешил полноэкранный режим");
+        }
+      };
+
+      document.addEventListener("fullscreenchange", () => {
+        $("#fullscreenButton").textContent =
+          document.fullscreenElement === $("#editor")
+            ? "⛶ Обычный режим"
+            : "⛶ На весь экран";
+      });
+
+      /*
+        Сохраняем выделение ДО того, как клик по кнопке
+        уберёт фокус с текста заметки.
+      */
+      $("#toolbar").addEventListener("pointerdown", event => {
+        if (event.target.closest("[data-format]")) {
+          rememberSelection();
+          event.preventDefault();
+        }
+      });
+
+      $("#toolbar").onclick = event => {
+        const button = event.target.closest("[data-format]");
+
+        if (button) formatSelection(button.dataset.format);
+      };
+
+      document.addEventListener("selectionchange", () => {
+        if (!$("#editor").hidden) rememberSelection();
+      });
+
+      $("#noteBody").addEventListener("change", event => {
+        if (!event.target.matches('.todo-row input[type="checkbox"]')) {
+          return;
+        }
+
+        const row = event.target.closest(".todo-row");
+
+        row.classList.toggle("done", event.target.checked);
+      });
+
+      $("#noteBody").addEventListener("click", event => {
+        const code = event.target.closest("code");
+
+        if (code) copyText(code.textContent);
+      });
+
+      $("#addImage").onclick = () => $("#imageInput").click();
+      $("#addFile").onclick = () => $("#fileInput").click();
+
+      $("#imageInput").onchange = async event => {
+        await handleFiles([...event.target.files], true);
+        event.target.value = "";
+      };
+
+      $("#fileInput").onchange = async event => {
+        await handleFiles([...event.target.files], false);
+        event.target.value = "";
+      };
+
+      $("#addLink").onclick = () => {
+        let url = prompt("Вставь ссылку:");
+
+        if (!url) return;
+
+        url = url.trim();
+
+        if (!/^[a-z]+:\/\//i.test(url)) {
+          url = "https://" + url;
+        }
+
+        const valid = safeLink(url);
+
+        if (!valid) {
+          notify("Нужна ссылка вида https://example.com");
+          return;
+        }
+
+        const name = prompt("Название ссылки:", valid) || valid;
+
+        draft.attachments.push({
+          id: uid(),
+          kind: "link",
+          name,
+          url: valid
+        });
+
+        renderAttachments();
+      };
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          closeSidebar();
+
+          if (!$("#editor").hidden && !document.fullscreenElement) {
+            closeEditor();
+          }
+        }
+
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          event.key.toLowerCase() === "s" &&
+          !$("#editor").hidden
+        ) {
+          event.preventDefault();
+          saveEditor();
+        }
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
