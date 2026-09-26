@@ -9,9 +9,7 @@
   <script>
     try {
       document.documentElement.dataset.theme =
-        localStorage.getItem("notes-theme") === "dark"
-          ? "dark"
-          : "light";
+        localStorage.getItem("notes-theme") === "dark" ? "dark" : "light";
     } catch {
       document.documentElement.dataset.theme = "light";
     }
@@ -27,7 +25,7 @@
       --hover: #e5e5ea;
       --border: #e5e5ea;
       --text: #25252b;
-      --muted: #84848f;
+      --muted: #777783;
       --accent: #f4c543;
       --accent-hover: #ffd35d;
       --accent-text: #342900;
@@ -44,16 +42,14 @@
       --hover: #333441;
       --border: #373844;
       --text: #f1f1f5;
-      --muted: #a1a1ae;
+      --muted: #aaaab7;
       --accent: #f4c543;
       --accent-hover: #ffd35d;
       --accent-text: #342900;
       --shadow: 0 10px 30px #0004;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -62,25 +58,19 @@
       color: var(--text);
     }
 
-    body, aside, main, .editor, .card, .tool, input, select, .note-body {
+    body, aside, main, .editor, .card, .tool, input, select {
       transition:
-        background-color .3s ease,
-        color .3s ease,
-        border-color .3s ease,
-        box-shadow .3s ease;
+        background-color .25s ease,
+        color .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
     }
 
-    button, input, select {
-      font: inherit;
-    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
 
-    button {
-      cursor: pointer;
-    }
-
-    [hidden] {
-      display: none !important;
-    }
+    [hidden] { display: none !important; }
 
     button:focus-visible,
     input:focus-visible,
@@ -123,9 +113,7 @@
       white-space: nowrap;
     }
 
-    .brand span {
-      color: #e5ae1f;
-    }
+    .brand span { color: #e5ae1f; }
 
     .nav-title {
       margin: 0 12px 8px;
@@ -161,9 +149,12 @@
       font-weight: 700;
     }
 
-    .count {
-      color: var(--muted);
+    .nav span:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
+
+    .count { color: var(--muted); }
 
     main {
       width: min(100%, 1120px);
@@ -171,9 +162,7 @@
       margin: 0 auto;
     }
 
-    .topbar {
-      margin-bottom: 38px;
-    }
+    .topbar { margin-bottom: 38px; }
 
     .top-left, .top-right, .editor-left, .editor-right {
       display: flex;
@@ -188,11 +177,13 @@
       color: var(--text);
       transition:
         transform .2s ease,
-        background-color .25s ease,
-        border-color .25s ease;
+        background-color .2s ease,
+        border-color .2s ease;
     }
 
-    .icon:hover, .soft:hover, .tool:hover {
+    .icon:hover:not(:disabled),
+    .soft:hover:not(:disabled),
+    .tool:hover:not(:disabled) {
       transform: translateY(-2px);
       background: var(--hover);
     }
@@ -204,9 +195,7 @@
       font-size: 20px;
     }
 
-    .soft {
-      padding: 10px 13px;
-    }
+    .soft { padding: 10px 13px; }
 
     .primary {
       padding: 11px 17px;
@@ -218,7 +207,7 @@
       transition: transform .2s ease, background-color .2s ease;
     }
 
-    .primary:hover {
+    .primary:hover:not(:disabled) {
       transform: translateY(-2px);
       background: var(--accent-hover);
     }
@@ -235,16 +224,30 @@
       font-size: 14px;
     }
 
-    .search {
-      width: 100%;
-      height: 46px;
+    .filters {
+      display: flex;
+      gap: 10px;
       margin: 25px 0 22px;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 0;
+      height: 46px;
       padding: 0 16px;
       border: 1px solid var(--border);
       border-radius: 11px;
       background: var(--surface);
       color: var(--text);
-      outline: none;
+    }
+
+    .sort {
+      max-width: 175px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
     }
 
     .grid {
@@ -293,6 +296,7 @@
     .card-foot {
       color: var(--muted);
       font-size: 12px;
+      overflow-wrap: anywhere;
     }
 
     .empty {
@@ -386,9 +390,7 @@
       font-size: 13px;
     }
 
-    .tool b, .tool i, .tool s {
-      font-size: 15px;
-    }
+    .tool b, .tool i, .tool s { font-size: 15px; }
 
     .note-body {
       min-height: 32vh;
@@ -398,6 +400,7 @@
       font-size: 17px;
       line-height: 1.75;
       overflow-wrap: anywhere;
+      white-space: pre-wrap;
     }
 
     .note-body:empty::before {
@@ -415,9 +418,7 @@
       cursor: copy;
     }
 
-    .note-body code:hover {
-      background: var(--hover);
-    }
+    .note-body code:hover { background: var(--hover); }
 
     .todo-row {
       display: flex;
@@ -460,7 +461,7 @@
 
     .attachment {
       position: relative;
-      width: 130px;
+      width: 135px;
       min-height: 95px;
       border-radius: 10px;
       background: var(--soft);
@@ -469,7 +470,7 @@
 
     .attachment img {
       display: block;
-      width: 130px;
+      width: 135px;
       height: 95px;
       object-fit: cover;
     }
@@ -486,8 +487,8 @@
       position: absolute;
       right: 4px;
       top: 4px;
-      width: 25px;
-      height: 25px;
+      width: 26px;
+      height: 26px;
       border: 0;
       border-radius: 50%;
       background: #262630e0;
@@ -534,9 +535,8 @@
       gap: 7px;
     }
 
-    .danger {
-      color: #e36b6b;
-    }
+    .danger { color: #d75454; }
+    :root[data-theme="dark"] .danger { color: #ff9292; }
 
     .toast {
       position: fixed;
@@ -554,9 +554,7 @@
       box-shadow: 0 8px 25px #0004;
     }
 
-    .mobile-only {
-      display: none;
-    }
+    .mobile-only { display: none; }
 
     @keyframes appear {
       from { opacity: 0; transform: translateY(10px); }
@@ -573,9 +571,7 @@
     }
 
     @media (max-width: 700px) {
-      .app {
-        display: block;
-      }
+      .app { display: block; }
 
       aside {
         position: fixed;
@@ -583,12 +579,10 @@
         left: 0;
         width: min(82vw, 280px);
         transform: translateX(-100%);
-        transition: transform .25s ease, background-color .3s ease;
+        transition: transform .25s ease, background-color .25s ease;
       }
 
-      aside.open {
-        transform: translateX(0);
-      }
+      aside.open { transform: translateX(0); }
 
       .backdrop:not([hidden]) {
         position: fixed;
@@ -600,43 +594,34 @@
         background: #0008;
       }
 
-      .mobile-only {
-        display: inline-block;
-      }
+      .mobile-only { display: inline-block; }
 
-      main {
-        padding: 17px 17px 60px;
-      }
-
-      .topbar {
-        margin-bottom: 28px;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .editor-inner {
-        padding: 28px 19px 50px;
-      }
+      main { padding: 17px 17px 60px; }
+      .topbar { margin-bottom: 28px; }
+      .grid { grid-template-columns: 1fr; }
+      .editor-inner { padding: 28px 19px 50px; }
 
       .editor-header, .editor-footer {
         padding-left: 12px;
         padding-right: 12px;
       }
 
-      .meta {
-        grid-template-columns: 1fr;
-      }
+      .meta { grid-template-columns: 1fr; }
 
       .tool {
         font-size: 12px;
         padding: 7px 9px;
       }
 
-      #fullscreenButton {
-        display: none;
-      }
+      .sort { max-width: 125px; }
+      #fullscreenButton { display: none; }
+    }
+
+    @media (max-width: 380px) {
+      .top-right { gap: 5px; }
+      .top-right .soft { padding: 9px; }
+      #newNote { padding: 10px; font-size: 13px; }
+      .editor-header .theme-toggle { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -653,22 +638,17 @@
     <aside id="sidebar">
       <div class="aside-top">
         <div class="brand">Заметки<span>.</span></div>
-
-        <button
-          class="icon theme-toggle"
-          type="button"
-          aria-label="Переключить тему"
-        >☾</button>
+        <button class="icon theme-toggle" type="button" aria-label="Переключить тему">☾</button>
       </div>
 
       <div>
         <div class="nav-title">Библиотека</div>
 
-        <button class="nav active" data-view="all">
+        <button class="nav active" type="button" data-view="all">
           Все заметки <span class="count" id="allCount">0</span>
         </button>
 
-        <button class="nav" data-view="pinned">
+        <button class="nav" type="button" data-view="pinned">
           Закреплённые <span class="count" id="pinnedCount">0</span>
         </button>
       </div>
@@ -676,40 +656,54 @@
       <div>
         <div class="nav-title">Папки</div>
         <div id="folderNav"></div>
-        <button class="nav" id="addFolder">＋ Новая папка</button>
+        <button class="nav" type="button" id="addFolder">＋ Новая папка</button>
       </div>
 
       <div style="margin-top:auto">
-        <button class="nav" id="shareSide">↗ Поделиться списком</button>
+        <button class="nav" type="button" id="shareSide">↗ Поделиться списком</button>
       </div>
     </aside>
 
-    <button class="backdrop" id="backdrop" hidden aria-label="Закрыть меню"></button>
+    <button
+      class="backdrop"
+      id="backdrop"
+      type="button"
+      hidden
+      aria-label="Закрыть меню"
+    ></button>
 
     <main>
       <div class="topbar">
         <div class="top-left">
-          <button class="icon mobile-only" id="openSidebar" aria-label="Открыть меню">☰</button>
+          <button class="icon mobile-only" id="openSidebar" type="button" aria-label="Открыть меню">☰</button>
           <button class="icon theme-toggle" type="button" aria-label="Переключить тему">☾</button>
         </div>
 
         <div class="top-right">
-          <button class="soft" id="exportButton" title="Сохранить резервную копию">↓</button>
-          <button class="soft" id="importButton" title="Импортировать резервную копию">↑</button>
-          <button class="primary" id="newNote">＋ Новая заметка</button>
+          <button class="soft" id="exportButton" type="button" title="Скачать резервную копию" aria-label="Экспорт">↓</button>
+          <button class="soft" id="importButton" type="button" title="Импортировать резервную копию" aria-label="Импорт">↑</button>
+          <button class="primary" id="newNote" type="button">＋ Новая заметка</button>
         </div>
       </div>
 
       <h1 id="pageTitle">Все заметки</h1>
       <p class="subtitle" id="pageSubtitle">Ваши мысли — в одном месте.</p>
 
-      <input
-        class="search"
-        id="search"
-        type="search"
-        placeholder="Поиск по заметкам, тегам и папкам…"
-        aria-label="Поиск заметок"
-      >
+      <div class="filters">
+        <input
+          class="search"
+          id="search"
+          type="search"
+          placeholder="Поиск по заметкам, тегам и папкам…"
+          aria-label="Поиск заметок"
+        >
+
+        <select class="sort" id="sortNotes" aria-label="Сортировка заметок">
+          <option value="updated">Недавние</option>
+          <option value="created">Новые</option>
+          <option value="title">По названию</option>
+        </select>
+      </div>
 
       <div class="grid" id="notesGrid"></div>
     </main>
@@ -719,11 +713,11 @@
     <header class="editor-header">
       <div class="editor-left">
         <button class="icon theme-toggle" type="button" aria-label="Переключить тему">☾</button>
-        <button class="soft" id="closeEditor">← Назад</button>
+        <button class="soft" id="closeEditor" type="button">← Назад</button>
       </div>
 
       <div class="editor-right">
-        <button class="soft" id="fullscreenButton">⛶ На весь экран</button>
+        <button class="soft" id="fullscreenButton" type="button">⛶ На весь экран</button>
       </div>
     </header>
 
@@ -740,23 +734,23 @@
         >
 
         <div class="toolbar" id="toolbar" aria-label="Форматирование текста">
-          <button class="tool" data-format="todo" title="Превратить выделенный текст в туду-лист">
+          <button class="tool" type="button" data-format="todo" title="Сделать туду-пункт из выделенного текста">
             ☑ Туду-лист
           </button>
 
-          <button class="tool" data-format="code" title="Моноширинный текст. Нажмите на него для копирования">
+          <button class="tool" type="button" data-format="code" title="Нажмите на оформленный текст, чтобы скопировать его">
             &lt;/&gt; Моноширинный
           </button>
 
-          <button class="tool" data-format="bold" title="Жирный текст">
+          <button class="tool" type="button" data-format="bold" title="Жирный текст">
             <b>Жирный</b>
           </button>
 
-          <button class="tool" data-format="italic" title="Курсив">
+          <button class="tool" type="button" data-format="italic" title="Курсив">
             <i>Курсив</i>
           </button>
 
-          <button class="tool" data-format="strike" title="Зачёркнутый текст">
+          <button class="tool" type="button" data-format="strike" title="Зачёркнутый текст">
             <s>Зачёркнутый</s>
           </button>
         </div>
@@ -772,7 +766,8 @@
         ></div>
 
         <div class="hint">
-          Выдели текст и нажми кнопку сверху. Нажатие на моноширинный текст копирует его.
+          Выделите текст и нажмите кнопку форматирования.
+          Нажатие на моноширинный текст копирует его.
         </div>
 
         <div id="attachmentsSection" hidden>
@@ -798,51 +793,66 @@
         </div>
 
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px">
-          <button class="soft" id="addImage">＋ Картинка</button>
-          <button class="soft" id="addFile">＋ Файл</button>
-          <button class="soft" id="addLink">＋ Ссылка</button>
+          <button class="soft" id="addImage" type="button">＋ Картинка</button>
+          <button class="soft" id="addFile" type="button">＋ Файл</button>
+          <button class="soft" id="addLink" type="button">＋ Ссылка</button>
         </div>
       </div>
     </div>
 
     <footer class="editor-footer">
       <div class="footer-left">
-        <button class="soft" id="pinNote">☆ Закрепить</button>
-        <button class="soft danger" id="deleteNote" hidden>Удалить</button>
+        <button class="soft" id="pinNote" type="button">☆ Закрепить</button>
+        <button class="soft danger" id="deleteNote" type="button" hidden>Удалить</button>
       </div>
 
-      <button class="primary" id="saveNote">Сохранить</button>
+      <button class="primary" id="saveNote" type="button">Сохранить</button>
     </footer>
   </section>
 
-  <input type="file" id="imageInput" accept="image/*" multiple hidden>
+  <input
+    type="file"
+    id="imageInput"
+    accept="image/png,image/jpeg,image/gif,image/webp,image/avif"
+    multiple
+    hidden
+  >
   <input type="file" id="fileInput" multiple hidden>
   <input type="file" id="importInput" accept=".json,application/json" hidden>
 
-  <div class="toast" id="toast" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script>
     "use strict";
 
     const $ = selector => document.querySelector(selector);
 
-    // Та же база, что в предыдущей версии блокнота.
+    // Имя базы оставлено прежним: заметки из предыдущей версии сохранятся.
     const DB_NAME = "beautiful-notes-db";
     const MAX_FILE_BYTES = 5 * 1024 * 1024;
+    const MAX_IMPORT_BYTES = 80 * 1024 * 1024;
+    const IMAGE_TYPES = new Set([
+      "image/png",
+      "image/jpeg",
+      "image/gif",
+      "image/webp",
+      "image/avif"
+    ]);
 
     let db;
     let notes = [];
     let folders = ["Личные", "Работа", "Идеи"];
     let currentView = "all";
     let draft = null;
+    let initialSnapshot = "";
     let savedRange = null;
     let toastTimer;
     let closeTimer;
+    let saving = false;
 
     function uid() {
-      return crypto.randomUUID
-        ? crypto.randomUUID()
-        : Date.now() + "-" + Math.random().toString(36).slice(2);
+      return globalThis.crypto?.randomUUID?.() ||
+        Date.now() + "-" + Math.random().toString(36).slice(2);
     }
 
     function escapeHTML(value) {
@@ -857,12 +867,10 @@
 
     function notify(message) {
       const toast = $("#toast");
-
       toast.textContent = message;
       toast.hidden = false;
 
       clearTimeout(toastTimer);
-
       toastTimer = setTimeout(() => {
         toast.hidden = true;
       }, 3200);
@@ -876,13 +884,17 @@
 
       document.querySelectorAll(".theme-toggle").forEach(button => {
         button.textContent = dark ? "☀" : "☾";
-        button.title = dark ? "Включить светлую тему" : "Включить тёмную тему";
+        button.title = dark
+          ? "Включить светлую тему"
+          : "Включить тёмную тему";
         button.setAttribute("aria-label", button.title);
       });
 
       try {
         localStorage.setItem("notes-theme", dark ? "dark" : "light");
-      } catch {}
+      } catch {
+        // Тема продолжит работать до перезагрузки страницы.
+      }
     }
 
     function openDB() {
@@ -892,19 +904,34 @@
         request.onupgradeneeded = () => {
           const database = request.result;
 
-          database.createObjectStore("notes", { keyPath: "id" });
-          database.createObjectStore("settings", { keyPath: "key" });
+          if (!database.objectStoreNames.contains("notes")) {
+            database.createObjectStore("notes", { keyPath: "id" });
+          }
+
+          if (!database.objectStoreNames.contains("settings")) {
+            database.createObjectStore("settings", { keyPath: "key" });
+          }
         };
 
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
+        request.onblocked = () =>
+          reject(new Error("База данных заблокирована другой вкладкой"));
       });
     }
 
     function transaction(storeName, mode, callback) {
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, mode);
-        const request = callback(tx.objectStore(storeName));
+        let tx;
+        let request;
+
+        try {
+          tx = db.transaction(storeName, mode);
+          request = callback(tx.objectStore(storeName));
+        } catch (error) {
+          reject(error);
+          return;
+        }
 
         let result;
 
@@ -913,8 +940,8 @@
         };
 
         tx.oncomplete = () => resolve(result);
-        tx.onerror = () => reject(tx.error);
-        tx.onabort = () => reject(tx.error);
+        tx.onerror = () => reject(tx.error || new Error("Ошибка хранилища"));
+        tx.onabort = () => reject(tx.error || new Error("Операция отменена"));
       });
     }
 
@@ -936,11 +963,15 @@
       );
 
     function formatDate(value) {
+      const date = new Date(value || Date.now());
+
+      if (Number.isNaN(date.getTime())) return "Без даты";
+
       return new Intl.DateTimeFormat("ru", {
         day: "numeric",
         month: "short",
         year: "numeric"
-      }).format(value || Date.now());
+      }).format(date);
     }
 
     function closeSidebar() {
@@ -950,6 +981,7 @@
 
     function visibleNotes() {
       const query = $("#search").value.trim().toLocaleLowerCase("ru");
+      const sort = $("#sortNotes").value;
 
       return notes.filter(note => {
         if (currentView === "pinned" && !note.pinned) return false;
@@ -957,26 +989,44 @@
         if (
           currentView.startsWith("folder:") &&
           note.folder !== currentView.slice(7)
-        ) return false;
+        ) {
+          return false;
+        }
 
         const searchable = [
           note.title,
           note.text,
           note.folder,
-          ...(note.tags || []),
-          ...(note.checks || []).map(item => item.text)
+          ...(Array.isArray(note.tags) ? note.tags : []),
+          ...(Array.isArray(note.checks)
+            ? note.checks.map(item => item?.text)
+            : [])
         ].join(" ").toLocaleLowerCase("ru");
 
         return searchable.includes(query);
-      }).sort((a, b) =>
-        Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) ||
-        (b.updatedAt || 0) - (a.updatedAt || 0)
-      );
+      }).sort((a, b) => {
+        const pinDifference =
+          Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
+
+        if (pinDifference) return pinDifference;
+
+        if (sort === "title") {
+          return String(a.title || "").localeCompare(
+            String(b.title || ""),
+            "ru"
+          );
+        }
+
+        const field = sort === "created" ? "createdAt" : "updatedAt";
+
+        return (Number(b[field]) || 0) - (Number(a[field]) || 0);
+      });
     }
 
     function render() {
       $("#allCount").textContent = notes.length;
-      $("#pinnedCount").textContent = notes.filter(note => note.pinned).length;
+      $("#pinnedCount").textContent =
+        notes.filter(note => note.pinned).length;
 
       document.querySelectorAll("[data-view]").forEach(button => {
         button.classList.toggle(
@@ -986,11 +1036,13 @@
       });
 
       $("#folderNav").innerHTML = folders.map(folder => {
-        const count = notes.filter(note => note.folder === folder).length;
+        const count =
+          notes.filter(note => note.folder === folder).length;
 
         return `
           <button
             class="nav ${currentView === "folder:" + folder ? "active" : ""}"
+            type="button"
             data-folder="${escapeHTML(folder)}"
           >
             <span>▤ ${escapeHTML(folder)}</span>
@@ -1013,18 +1065,20 @@
 
       $("#notesGrid").innerHTML = shown.length
         ? shown.map(note => `
-          <button class="card" data-id="${escapeHTML(note.id)}">
+          <button
+            class="card"
+            type="button"
+            data-id="${escapeHTML(note.id)}"
+          >
             <div class="card-title">
               ${escapeHTML(note.title || "Без названия")}
               ${note.pinned ? " ★" : ""}
             </div>
 
-            <div class="preview">
-              ${escapeHTML(
-                note.text ||
-                (note.attachments?.length ? "Вложения" : "Пустая заметка")
-              )}
-            </div>
+            <div class="preview">${escapeHTML(
+              note.text ||
+              (note.attachments?.length ? "Вложения" : "Пустая заметка")
+            )}</div>
 
             <div class="card-foot">
               ${formatDate(note.updatedAt)}
@@ -1049,20 +1103,26 @@
     }
 
     /*
-      Очищаем HTML перед показом и сохранением.
-      Разрешены только элементы форматирования нашего редактора.
-      Это важно и для старых заметок, и для импортированных данных.
+      Разрешаем только элементы форматирования редактора.
+      Скрипты, стили, SVG, iframe и прочие опасные элементы
+      удаляем целиком, а не превращаем в текст.
     */
     function sanitizeRichHTML(html) {
-      const source = document.createElement("div");
-      source.innerHTML = String(html || "");
+      const template = document.createElement("template");
+      template.innerHTML = String(html || "");
 
       const allowed = new Set([
         "DIV", "P", "BR", "STRONG", "B",
         "EM", "I", "S", "STRIKE", "CODE", "SPAN"
       ]);
 
-      function cleanNode(node) {
+      const discard = new Set([
+        "SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED",
+        "SVG", "MATH", "FORM", "TEMPLATE", "META",
+        "LINK", "BASE", "VIDEO", "AUDIO"
+      ]);
+
+      function cleanNode(node, insideTodo = false) {
         if (node.nodeType === Node.TEXT_NODE) {
           return document.createTextNode(node.textContent);
         }
@@ -1071,14 +1131,27 @@
           return document.createDocumentFragment();
         }
 
+        if (discard.has(node.tagName)) {
+          return document.createDocumentFragment();
+        }
+
         if (node.tagName === "INPUT") {
-          if (node.type !== "checkbox") {
+          if (!insideTodo || node.type !== "checkbox") {
             return document.createDocumentFragment();
           }
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
-          checkbox.checked = node.checked || node.hasAttribute("checked");
+          checkbox.checked =
+            node.checked || node.hasAttribute("checked");
+          checkbox.setAttribute(
+            "aria-label",
+            "Отметить выполненным"
+          );
+
+          if (checkbox.checked) {
+            checkbox.setAttribute("checked", "");
+          }
 
           return checkbox;
         }
@@ -1087,18 +1160,20 @@
           const fragment = document.createDocumentFragment();
 
           node.childNodes.forEach(child => {
-            fragment.append(cleanNode(child));
+            fragment.append(cleanNode(child, insideTodo));
           });
 
           return fragment;
         }
 
-        const element = document.createElement(node.tagName.toLowerCase());
+        const element =
+          document.createElement(node.tagName.toLowerCase());
 
-        if (
+        const isTodo =
           node.tagName === "DIV" &&
-          node.classList.contains("todo-row")
-        ) {
+          node.classList.contains("todo-row");
+
+        if (isTodo) {
           element.className = "todo-row";
 
           if (node.classList.contains("done")) {
@@ -1114,7 +1189,7 @@
         }
 
         node.childNodes.forEach(child => {
-          element.append(cleanNode(child));
+          element.append(cleanNode(child, insideTodo || isTodo));
         });
 
         return element;
@@ -1122,7 +1197,7 @@
 
       const result = document.createElement("div");
 
-      source.childNodes.forEach(node => {
+      template.content.childNodes.forEach(node => {
         result.append(cleanNode(node));
       });
 
@@ -1131,7 +1206,7 @@
 
     function safeLink(value) {
       try {
-        const url = new URL(value);
+        const url = new URL(String(value));
 
         return ["http:", "https:"].includes(url.protocol)
           ? url.href
@@ -1141,7 +1216,72 @@
       }
     }
 
+    function safeAttachment(value) {
+      if (!value || typeof value !== "object") return null;
+
+      const name =
+        String(value.name || "Без названия").slice(0, 180);
+      const id =
+        typeof value.id === "string" ? value.id : uid();
+
+      if (value.kind === "link") {
+        const url = safeLink(value.url);
+
+        return url
+          ? { id, kind: "link", name, url }
+          : null;
+      }
+
+      if (typeof value.data !== "string") return null;
+
+      // Ограничиваем размер и требуем именно base64 data URL.
+      if (
+        value.data.length > MAX_FILE_BYTES * 1.4 + 200 ||
+        !/^data:[^,]*;base64,[a-z0-9+/=\s]+$/i.test(value.data)
+      ) {
+        return null;
+      }
+
+      const comma = value.data.indexOf(",");
+      const base64 = value.data.slice(comma + 1).replace(/\s/g, "");
+
+      if (!base64 || base64.length > MAX_FILE_BYTES * 1.4 + 100) {
+        return null;
+      }
+
+      if (value.kind === "image") {
+        const match =
+          /^data:(image\/(?:png|jpeg|gif|webp|avif));base64,/i.exec(
+            value.data
+          );
+
+        if (!match) return null;
+
+        return {
+          id,
+          kind: "image",
+          name,
+          data: `data:${match[1].toLowerCase()};base64,${base64}`
+        };
+      }
+
+      if (value.kind === "file") {
+        // Вложения скачиваются как бинарные файлы, а не открываются
+        // как HTML или скрипт из потенциально опасного data URL.
+        return {
+          id,
+          kind: "file",
+          name,
+          data: `data:application/octet-stream;base64,${base64}`
+        };
+      }
+
+      return null;
+    }
+
     function renderAttachments() {
+      if (!draft) return;
+
       const container = $("#attachments");
       container.replaceChildren();
 
@@ -1155,14 +1295,14 @@
           const image = document.createElement("img");
           image.src = attachment.data;
           image.alt = attachment.name;
-
+          image.loading = "lazy";
           box.append(image);
         } else {
           const link = document.createElement("a");
 
           link.href = attachment.kind === "link"
-            ? safeLink(attachment.url) || "#"
-            : attachment.data || "#";
+            ? attachment.url
+            : attachment.data;
 
           link.textContent =
             (attachment.kind === "link" ? "↗ " : "▤ ") +
@@ -1179,10 +1319,13 @@
         }
 
         const remove = document.createElement("button");
-
         remove.type = "button";
         remove.textContent = "×";
         remove.title = "Удалить вложение";
+        remove.setAttribute(
+          "aria-label",
+          `Удалить вложение ${attachment.name}`
+        );
 
         remove.onclick = () => {
           draft.attachments.splice(index, 1);
@@ -1196,14 +1339,68 @@
 
     function updatePinButton() {
       $("#pinNote").textContent =
-        draft.pinned ? "★ Закреплено" : "☆ Закрепить";
+        draft?.pinned ? "★ Закреплено" : "☆ Закрепить";
+    }
+
+    function createTodoRow(text = "", done = false) {
+      const row = document.createElement("div");
+      row.className = "todo-row";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(done);
+      checkbox.setAttribute(
+        "aria-label",
+        "Отметить выполненным"
+      );
+
+      const content = document.createElement("span");
+      content.className = "todo-text";
+      content.textContent = text || "\u200B";
+
+      if (done) row.classList.add("done");
+
+      row.append(checkbox, content);
+      return row;
+    }
+
+    function serializedBody() {
+      const copy = $("#noteBody").cloneNode(true);
+
+      copy.querySelectorAll(".todo-row").forEach(row => {
+        const checkbox =
+          row.querySelector('input[type="checkbox"]');
+
+        if (!checkbox) return;
+
+        row.classList.toggle("done", checkbox.checked);
+
+        if (checkbox.checked) {
+          checkbox.setAttribute("checked", "");
+        } else {
+          checkbox.removeAttribute("checked");
+        }
+      });
+
+      return sanitizeRichHTML(copy.innerHTML);
+    }
+
+    function formSnapshot() {
+      return JSON.stringify({
+        title: $("#noteTitle").value,
+        richHTML: serializedBody(),
+        folder: $("#noteFolder").value,
+        tags: $("#noteTags").value,
+        reminder: $("#noteReminder").value,
+        pinned: Boolean(draft?.pinned),
+        attachments: draft?.attachments || []
+      });
     }
 
     function openEditor(note = null) {
       clearTimeout(closeTimer);
 
       const editor = $("#editor");
-
       editor.classList.remove("closing");
 
       draft = note
@@ -1225,9 +1422,17 @@
             createdAt: Date.now()
           };
 
-      draft.tags ||= [];
-      draft.checks ||= [];
-      draft.attachments ||= [];
+      draft.tags = Array.isArray(draft.tags)
+        ? draft.tags.filter(tag => typeof tag === "string")
+        : [];
+
+      draft.checks = Array.isArray(draft.checks)
+        ? draft.checks
+        : [];
+
+      draft.attachments = Array.isArray(draft.attachments)
+        ? draft.attachments.map(safeAttachment).filter(Boolean)
+        : [];
 
       renderFolderOptions();
 
@@ -1240,19 +1445,22 @@
       $("#noteReminder").value = draft.reminder || "";
       $("#deleteNote").hidden = !note;
 
-      /*
-        Старые обычные заметки открываются как текст.
-        Старые пункты списка переносим внутрь нового редактора.
-      */
       const body = $("#noteBody");
+      const hasRichHTML = Boolean(draft.richHTML);
 
-      body.innerHTML = draft.richHTML
+      body.innerHTML = hasRichHTML
         ? sanitizeRichHTML(draft.richHTML)
         : escapeHTML(draft.text || "").replace(/\n/g, "<br>");
 
-      for (const item of draft.checks) {
-        const row = createTodoRow(item.text, item.done);
-        body.append(row);
+      // Старые пункты переносим только при отсутствии richHTML.
+      // Иначе при каждом открытии они дублировались бы.
+      if (!hasRichHTML) {
+        for (const item of draft.checks) {
+          body.append(createTodoRow(
+            String(item?.text || ""),
+            Boolean(item?.done)
+          ));
+        }
       }
 
       draft.checks = [];
@@ -1261,23 +1469,40 @@
       updatePinButton();
 
       savedRange = null;
-
       editor.hidden = false;
       $(".editor-scroll").scrollTop = 0;
       document.body.style.overflow = "hidden";
 
+      initialSnapshot = formSnapshot();
       $("#noteTitle").focus();
     }
 
-    async function closeEditor() {
+    async function closeEditor(force = false) {
       const editor = $("#editor");
 
-      if (editor.hidden || editor.classList.contains("closing")) return;
+      if (
+        editor.hidden ||
+        editor.classList.contains("closing") ||
+        (saving && !force)
+      ) {
+        return;
+      }
+
+      if (
+        !force &&
+        draft &&
+        formSnapshot() !== initialSnapshot &&
+        !confirm("Есть несохранённые изменения. Закрыть заметку?")
+      ) {
+        return;
+      }
 
       if (document.fullscreenElement === editor) {
         try {
           await document.exitFullscreen();
-        } catch {}
+        } catch {
+          // Редактор всё равно закроется.
+        }
       }
 
       editor.classList.add("closing");
@@ -1288,32 +1513,10 @@
         document.body.style.overflow = "";
         draft = null;
         savedRange = null;
+        initialSnapshot = "";
       }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 220);
     }
 
-    function createTodoRow(text = "", done = false) {
-      const row = document.createElement("div");
-      row.className = "todo-row";
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = Boolean(done);
-      checkbox.setAttribute("aria-label", "Отметить выполненным");
-
-      const content = document.createElement("span");
-      content.className = "todo-text";
-      content.textContent = text || "\u200B";
-
-      if (done) row.classList.add("done");
-
-      row.append(checkbox, content);
-      return row;
-    }
-
-    /*
-      Запоминаем выделение внутри текста: нажатие кнопки панели
-      не должно его терять.
-    */
     function rememberSelection() {
       const selection = window.getSelection();
 
@@ -1351,7 +1554,6 @@
 
     function putCaretAfter(node) {
       const range = document.createRange();
-
       range.setStartAfter(node);
       range.collapse(true);
 
@@ -1366,35 +1568,45 @@
       const range = restoreSelection();
 
       if (!range) {
-        notify("Сначала выдели текст в заметке");
+        notify("Сначала поставьте курсор или выделите текст в заметке");
         return;
       }
 
       const selectedText = window.getSelection().toString();
 
       if (format === "todo") {
+        const insideTodo =
+          range.startContainer.parentElement?.closest(".todo-row");
+
+        if (insideTodo) {
+          notify("Курсор уже находится внутри туду-пункта");
+          return;
+        }
+
         const lines = selectedText
           ? selectedText.split(/\r?\n/).filter(line => line.trim())
           : [""];
 
-        const fragment = document.createDocumentFragment();
+        if (!lines.length) {
+          notify("В выделении нет текста");
+          return;
+        }
+
         const rows = lines.map(line => createTodoRow(line));
+        const fragment = document.createDocumentFragment();
 
         rows.forEach(row => fragment.append(row));
 
         range.deleteContents();
         range.insertNode(fragment);
-
-        if (rows.length) {
-          putCaretAfter(rows[rows.length - 1]);
-        }
+        putCaretAfter(rows[rows.length - 1]);
 
         notify("Туду-лист добавлен");
         return;
       }
 
       if (!selectedText) {
-        notify("Сначала выдели текст, который нужно оформить");
+        notify("Сначала выделите текст, который нужно оформить");
         return;
       }
 
@@ -1408,19 +1620,13 @@
       if (!tag) return;
 
       const wrapper = document.createElement(tag);
-
-      /*
-        Сохраняем выделенное содержимое, а не только обычный текст:
-        можно оформить фрагмент, в котором уже есть форматирование.
-      */
       wrapper.append(range.extractContents());
       range.insertNode(wrapper);
-
       putCaretAfter(wrapper);
 
       notify(
         format === "code"
-          ? "Готово. Нажми на этот текст, чтобы скопировать"
+          ? "Готово. Нажмите на текст, чтобы скопировать"
           : "Форматирование применено"
       );
     }
@@ -1431,7 +1637,6 @@
         notify("Скопировано");
       } catch {
         const helper = document.createElement("textarea");
-
         helper.value = text;
         helper.style.position = "fixed";
         helper.style.opacity = "0";
@@ -1440,72 +1645,72 @@
         helper.select();
 
         const success = document.execCommand("copy");
-
         helper.remove();
 
-        notify(success ? "Скопировано" : "Не удалось скопировать");
+        notify(
+          success ? "Скопировано" : "Не удалось скопировать"
+        );
       }
     }
 
     async function saveEditor() {
-      if (!draft || $("#editor").classList.contains("closing")) return;
-
-      const body = $("#noteBody");
-
-      /*
-        checked у checkbox — свойство, а не надёжный HTML-атрибут.
-        Перед сохранением переносим его в атрибут.
-      */
-      body.querySelectorAll(".todo-row").forEach(row => {
-        const checkbox = row.querySelector('input[type="checkbox"]');
-
-        if (!checkbox) return;
-
-        row.classList.toggle("done", checkbox.checked);
-
-        if (checkbox.checked) {
-          checkbox.setAttribute("checked", "");
-        } else {
-          checkbox.removeAttribute("checked");
-        }
-      });
-
-      draft.title = $("#noteTitle").value.trim();
-      draft.richHTML = sanitizeRichHTML(body.innerHTML);
-      draft.text = body.innerText.replace(/\u200B/g, "").trim();
-      draft.folder = $("#noteFolder").value;
-      draft.tags = [...new Set(
-        $("#noteTags").value.split(",").map(tag => tag.trim()).filter(Boolean)
-      )];
-
-      if (draft.reminder !== $("#noteReminder").value) {
-        draft.notified = false;
+      if (
+        !draft ||
+        saving ||
+        $("#editor").classList.contains("closing")
+      ) {
+        return;
       }
 
-      draft.reminder = $("#noteReminder").value;
-      draft.updatedAt = Date.now();
+      saving = true;
+      $("#saveNote").disabled = true;
+
+      const saved = {
+        ...draft,
+        title: $("#noteTitle").value.trim(),
+        richHTML: serializedBody(),
+        text: $("#noteBody").innerText
+          .replace(/\u200B/g, "")
+          .trim(),
+        folder: $("#noteFolder").value,
+        tags: [...new Set(
+          $("#noteTags").value
+            .split(",")
+            .map(tag => tag.trim())
+            .filter(Boolean)
+        )],
+        checks: [],
+        reminder: $("#noteReminder").value,
+        updatedAt: Date.now()
+      };
+
+      if (saved.reminder !== draft.reminder) {
+        saved.notified = false;
+      }
 
       try {
-        await putNote(draft);
-
+        await putNote(saved);
         notes = await getAllNotes();
         render();
 
-        await closeEditor();
+        await closeEditor(true);
         notify("Заметка сохранена");
       } catch (error) {
         console.error(error);
-        notify("Не удалось сохранить заметку. Проверь свободное место");
+        notify(
+          "Не удалось сохранить заметку. Проверьте свободное место"
+        );
+      } finally {
+        saving = false;
+        $("#saveNote").disabled = false;
       }
     }
 
     function readAsDataURL(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-
         reader.onload = () => resolve(reader.result);
         reader.onerror = () => reject(reader.error);
-
         reader.readAsDataURL(file);
       });
     }
@@ -1513,34 +1718,54 @@
     async function handleFiles(files, imagesOnly) {
       if (!draft) return;
 
+      const targetDraft = draft;
+
       for (const file of files) {
         if (file.size > MAX_FILE_BYTES) {
           notify(`Файл «${file.name}» больше 5 МБ`);
           continue;
         }
 
-        if (imagesOnly && !file.type.startsWith("image/")) continue;
+        if (imagesOnly && !IMAGE_TYPES.has(file.type)) {
+          notify(`Формат картинки «${file.name}» не поддерживается`);
+          continue;
+        }
 
         try {
-          draft.attachments.push({
+          const data = await readAsDataURL(file);
+
+          // Если за время чтения пользователь закрыл заметку,
+          // не добавляем вложение в уже закрытый редактор.
+          if (draft !== targetDraft) return;
+
+          const attachment = safeAttachment({
             id: uid(),
             kind: imagesOnly ? "image" : "file",
             name: file.name,
-            data: await readAsDataURL(file)
+            data
           });
+
+          if (!attachment) {
+            notify(`Не удалось добавить «${file.name}»`);
+            continue;
+          }
+
+          targetDraft.attachments.push(attachment);
         } catch {
           notify(`Не удалось прочитать «${file.name}»`);
         }
       }
 
-      renderAttachments();
+      if (draft === targetDraft) renderAttachments();
     }
 
     function shareText() {
       return visibleNotes().map(note => [
         note.title || "Без названия",
         note.text || "",
-        (note.tags || []).map(tag => "#" + tag).join(" ")
+        (Array.isArray(note.tags) ? note.tags : [])
+          .map(tag => "#" + tag)
+          .join(" ")
       ].filter(Boolean).join("\n")).join("\n\n──────────\n\n");
     }
 
@@ -1554,7 +1779,10 @@
 
       if (navigator.share) {
         try {
-          await navigator.share({ title: "Мои заметки", text });
+          await navigator.share({
+            title: "Мои заметки",
+            text
+          });
           return;
         } catch (error) {
           if (error.name === "AbortError") return;
@@ -1565,53 +1793,135 @@
     }
 
     function exportNotes() {
-      const data = JSON.stringify({ version: 2, folders, notes }, null, 2);
-      const blob = new Blob([data], { type: "application/json" });
+      const data = JSON.stringify({
+        version: 3,
+        folders,
+        notes
+      }, null, 2);
+
+      const blob = new Blob([data], {
+        type: "application/json"
+      });
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
 
       link.href = url;
       link.download = "zametki-backup.json";
+      document.body.append(link);
       link.click();
+      link.remove();
 
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      notify("Резервная копия скачана");
+    }
+
+    function normalizeImportedNote(value) {
+      if (
+        !value ||
+        typeof value !== "object" ||
+        typeof value.id !== "string" ||
+        !value.id ||
+        typeof value.title !== "string"
+      ) {
+        return null;
+      }
+
+      return {
+        id: value.id.slice(0, 180),
+        title: value.title.slice(0, 120),
+        text:
+          typeof value.text === "string" ? value.text : "",
+        richHTML:
+          typeof value.richHTML === "string"
+            ? sanitizeRichHTML(value.richHTML)
+            : "",
+        folder:
+          typeof value.folder === "string"
+            ? value.folder.slice(0, 80)
+            : "",
+        tags: Array.isArray(value.tags)
+          ? value.tags
+              .filter(tag => typeof tag === "string")
+              .map(tag => tag.slice(0, 80))
+              .slice(0, 100)
+          : [],
+        checks: Array.isArray(value.checks)
+          ? value.checks.slice(0, 1000).map(item => ({
+              text: String(item?.text || "").slice(0, 2000),
+              done: Boolean(item?.done)
+            }))
+          : [],
+        attachments: Array.isArray(value.attachments)
+          ? value.attachments
+              .slice(0, 100)
+              .map(safeAttachment)
+              .filter(Boolean)
+          : [],
+        reminder:
+          typeof value.reminder === "string"
+            ? value.reminder.slice(0, 30)
+            : "",
+        notified: Boolean(value.notified),
+        pinned: Boolean(value.pinned),
+        createdAt:
+          Number.isFinite(value.createdAt)
+            ? value.createdAt
+            : Date.now(),
+        updatedAt:
+          Number.isFinite(value.updatedAt)
+            ? value.updatedAt
+            : Date.now()
+      };
     }
 
     async function importNotes(file) {
       try {
-        const data = JSON.parse(await file.text());
-
-        if (!Array.isArray(data.notes) || !Array.isArray(data.folders)) {
-          throw new Error("Неверный формат");
+        if (file.size > MAX_IMPORT_BYTES) {
+          notify("Резервная копия слишком большая");
+          return;
         }
 
-        if (!confirm(`Импортировать ${data.notes.length} заметок?`)) return;
+        const data = JSON.parse(await file.text());
 
-        folders = [...new Set([
+        if (
+          !data ||
+          !Array.isArray(data.notes) ||
+          !Array.isArray(data.folders) ||
+          data.notes.length > 5000
+        ) {
+          throw new Error("Неверный формат резервной копии");
+        }
+
+        const approved = confirm(
+          `Импортировать ${data.notes.length} заметок?\n` +
+          "Заметки с совпадающими идентификаторами будут заменены."
+        );
+
+        if (!approved) return;
+
+        const importedFolders = data.folders
+          .filter(value => typeof value === "string")
+          .map(value => value.trim().slice(0, 80))
+          .filter(Boolean);
+
+        const updatedFolders = [...new Set([
           ...folders,
-          ...data.folders.filter(value =>
-            typeof value === "string" && value.trim()
-          )
+          ...importedFolders
         ])];
-
-        await saveFolders();
 
         let count = 0;
 
-        for (const note of data.notes) {
-          if (
-            !note ||
-            typeof note.id !== "string" ||
-            typeof note.title !== "string"
-          ) continue;
-
-          if (note.richHTML) {
-            note.richHTML = sanitizeRichHTML(note.richHTML);
-          }
+        for (const value of data.notes) {
+          const note = normalizeImportedNote(value);
+          if (!note) continue;
 
           await putNote(note);
           count++;
         }
+
+        folders = updatedFolders;
+        await saveFolders();
 
         notes = await getAllNotes();
         render();
@@ -1619,7 +1929,15 @@
         notify(`Импортировано заметок: ${count}`);
       } catch (error) {
         console.error(error);
-        notify("Не удалось импортировать файл");
+
+        // Если ошибка произошла после части записей, показываем
+        // фактическое состояние базы, а не устаревший список.
+        try {
+          notes = await getAllNotes();
+          render();
+        } catch {}
+
+        notify("Не удалось полностью импортировать файл");
       }
     }
 
@@ -1627,17 +1945,21 @@
       const now = Date.now();
 
       for (const note of notes) {
-        if (
-          !note.reminder ||
-          note.notified ||
-          new Date(note.reminder).getTime() > now
-        ) continue;
+        if (!note.reminder || note.notified) continue;
+
+        const time = new Date(note.reminder).getTime();
+
+        if (!Number.isFinite(time) || time > now) continue;
 
         note.notified = true;
 
         try {
           await putNote(note);
-        } catch {}
+        } catch (error) {
+          note.notified = false;
+          console.error(error);
+          continue;
+        }
 
         notify(`Напоминание: ${note.title || "Без названия"}`);
 
@@ -1645,9 +1967,19 @@
           "Notification" in window &&
           Notification.permission === "granted"
         ) {
-          new Notification(note.title || "Напоминание", {
-            body: (note.text || "Пора заглянуть в заметку").slice(0, 120)
-          });
+          try {
+            new Notification(
+              note.title || "Напоминание",
+              {
+                body: (
+                  note.text || "Пора заглянуть в заметку"
+                ).slice(0, 120)
+              }
+            );
+          } catch {
+            // В некоторых браузерах системные уведомления
+            // недоступны даже при выданном разрешении.
+          }
         }
       }
     }
@@ -1672,12 +2004,19 @@
         const saved = await getSavedFolders();
 
         if (Array.isArray(saved?.value)) {
-          folders = saved.value;
+          folders = saved.value.filter(
+            value =>
+              typeof value === "string" &&
+              value.trim()
+          );
         }
       } catch (error) {
         console.error(error);
         notify("Не удалось открыть хранилище браузера");
+
         $("#newNote").disabled = true;
+        $("#importButton").disabled = true;
+        $("#exportButton").disabled = true;
         return;
       }
 
@@ -1687,13 +2026,15 @@
 
       $("#newNote").onclick = () => openEditor();
       $("#search").oninput = render;
+      $("#sortNotes").onchange = render;
 
       $("#notesGrid").onclick = event => {
         const card = event.target.closest("[data-id]");
-
         if (!card) return;
 
-        const note = notes.find(item => item.id === card.dataset.id);
+        const note = notes.find(
+          item => item.id === card.dataset.id
+        );
 
         if (note) openEditor(note);
       };
@@ -1708,7 +2049,6 @@
 
       $("#folderNav").onclick = event => {
         const button = event.target.closest("[data-folder]");
-
         if (!button) return;
 
         currentView = "folder:" + button.dataset.folder;
@@ -1717,7 +2057,8 @@
       };
 
       $("#addFolder").onclick = async () => {
-        const name = prompt("Название новой папки:")?.trim();
+        const name =
+          prompt("Название новой папки:")?.trim().slice(0, 80);
 
         if (!name) return;
 
@@ -1732,8 +2073,16 @@
         }
 
         folders.push(name);
-        await saveFolders();
-        render();
+
+        try {
+          await saveFolders();
+          render();
+          notify("Папка создана");
+        } catch (error) {
+          folders.pop();
+          console.error(error);
+          notify("Не удалось сохранить папку");
+        }
       };
 
       $("#openSidebar").onclick = () => {
@@ -1759,22 +2108,34 @@
         event.target.value = "";
       };
 
-      $("#closeEditor").onclick = closeEditor;
+      $("#closeEditor").onclick = () => closeEditor();
       $("#saveNote").onclick = saveEditor;
 
       $("#deleteNote").onclick = async () => {
-        if (!draft || !confirm("Удалить эту заметку?")) return;
+        if (
+          !draft ||
+          saving ||
+          !confirm("Удалить эту заметку?")
+        ) {
+          return;
+        }
 
-        await removeNote(draft.id);
+        try {
+          await removeNote(draft.id);
+          notes = await getAllNotes();
+          render();
 
-        notes = await getAllNotes();
-        render();
-
-        await closeEditor();
-        notify("Заметка удалена");
+          await closeEditor(true);
+          notify("Заметка удалена");
+        } catch (error) {
+          console.error(error);
+          notify("Не удалось удалить заметку");
+        }
       };
 
       $("#pinNote").onclick = () => {
+        if (!draft) return;
+
         draft.pinned = !draft.pinned;
         updatePinButton();
       };
@@ -1787,7 +2148,9 @@
             await $("#editor").requestFullscreen();
           }
         } catch {
-          notify("Браузер не разрешил полноэкранный режим");
+          notify(
+            "Браузер не разрешил полноэкранный режим"
+          );
         }
       };
 
@@ -1798,10 +2161,8 @@
             : "⛶ На весь экран";
       });
 
-      /*
-        Сохраняем выделение ДО того, как клик по кнопке
-        уберёт фокус с текста заметки.
-      */
+      // Сохраняем выделение до потери фокуса при нажатии
+      // на кнопку панели форматирования.
       $("#toolbar").addEventListener("pointerdown", event => {
         if (event.target.closest("[data-format]")) {
           rememberSelection();
@@ -1810,9 +2171,12 @@
       });
 
       $("#toolbar").onclick = event => {
-        const button = event.target.closest("[data-format]");
+        const button =
+          event.target.closest("[data-format]");
 
-        if (button) formatSelection(button.dataset.format);
+        if (button) {
+          formatSelection(button.dataset.format);
+        }
       };
 
       document.addEventListener("selectionchange", () => {
@@ -1820,19 +2184,57 @@
       });
 
       $("#noteBody").addEventListener("change", event => {
-        if (!event.target.matches('.todo-row input[type="checkbox"]')) {
+        if (
+          !event.target.matches(
+            '.todo-row input[type="checkbox"]'
+          )
+        ) {
           return;
         }
 
         const row = event.target.closest(".todo-row");
-
-        row.classList.toggle("done", event.target.checked);
+        row?.classList.toggle(
+          "done",
+          event.target.checked
+        );
       });
 
       $("#noteBody").addEventListener("click", event => {
         const code = event.target.closest("code");
 
-        if (code) copyText(code.textContent);
+        if (code && $("#noteBody").contains(code)) {
+          copyText(code.textContent);
+        }
+      });
+
+      // Вставляем из буфера обычный текст: оформление из чужих
+      // страниц не ломает редактор и не приносит опасный HTML.
+      $("#noteBody").addEventListener("paste", event => {
+        const text =
+          event.clipboardData?.getData("text/plain");
+
+        if (text == null) return;
+
+        event.preventDefault();
+
+        const selection = window.getSelection();
+
+        if (!selection?.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+
+        if (
+          !$("#noteBody").contains(range.startContainer) ||
+          !$("#noteBody").contains(range.endContainer)
+        ) {
+          return;
+        }
+
+        const node = document.createTextNode(text);
+
+        range.deleteContents();
+        range.insertNode(node);
+        putCaretAfter(node);
       });
 
       $("#addImage").onclick = () => $("#imageInput").click();
@@ -1849,8 +2251,9 @@
       };
 
       $("#addLink").onclick = () => {
-        let url = prompt("Вставь ссылку:");
+        if (!draft) return;
 
+        let url = prompt("Вставьте ссылку:");
         if (!url) return;
 
         url = url.trim();
@@ -1862,16 +2265,20 @@
         const valid = safeLink(url);
 
         if (!valid) {
-          notify("Нужна ссылка вида https://example.com");
+          notify(
+            "Нужна ссылка вида https://example.com"
+          );
           return;
         }
 
-        const name = prompt("Название ссылки:", valid) || valid;
+        const name =
+          prompt("Название ссылки:", valid)?.trim() ||
+          valid;
 
         draft.attachments.push({
           id: uid(),
           kind: "link",
-          name,
+          name: name.slice(0, 180),
           url: valid
         });
 
@@ -1882,7 +2289,10 @@
         if (event.key === "Escape") {
           closeSidebar();
 
-          if (!$("#editor").hidden && !document.fullscreenElement) {
+          if (
+            !$("#editor").hidden &&
+            !document.fullscreenElement
+          ) {
             closeEditor();
           }
         }
@@ -1894,6 +2304,18 @@
         ) {
           event.preventDefault();
           saveEditor();
+        }
+      });
+
+      window.addEventListener("beforeunload", event => {
+        if (
+          !$("#editor").hidden &&
+          draft &&
+          !saving &&
+          formSnapshot() !== initialSnapshot
+        ) {
+          event.preventDefault();
+          event.returnValue = "";
         }
       });
     }
